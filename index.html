@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exam Master Suite - All-in-One Edition (v6.0)</title>
+    <title>Exam Master Suite - Multi-Source Edition (v6.5)</title>
     <!-- Favicon menggunakan Emoji -->
     <link class="js-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <!-- Tailwind CSS v4 untuk UI Modern -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Pustaka Jalur Excel (SheetJS) -->
+    <!-- Pustaka Membaca Excel (SheetJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Pustaka Pembuat File Word (.docx) -->
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     <!-- Pustaka Kompresi ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- PUSTAKA TAMBAHAN UNTUK EKSTRAKSI PDF & WORD LOKAL -->
+    <!-- Mammoth.js untuk membaca file .docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- PDF.js untuk membaca file .pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Set worker untuk pustaka PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -22,10 +32,11 @@
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
-                    🛠️ Exam Master Suite (v6.0)
+                    🛠️ Exam Master Suite (v6.5)
                 </h1>
-                <p class="text-indigo-100 text-sm mt-1">Satu aplikasi untuk Pengacak Soal Massal & Pembuat Soal AI dengan format cetak kustom.</p>
+                <p class="text-indigo-100 text-sm mt-1">Multi-Source Input: Unggah PDF, Word, atau Tempel Materi untuk Pembuat Soal AI.</p>
             </div>
+            <!-- Statistik Penggunaan -->
             <div class="bg-indigo-700/50 border border-indigo-500/30 px-4 py-2.5 rounded-xl text-xs space-y-1 w-full md:w-auto">
                 <div class="flex justify-between md:justify-start gap-4">
                     <span class="text-indigo-200">Total Penggunaan Global:</span>
@@ -70,7 +81,7 @@
             </div>
         </section>
 
-        <!-- PANEL PARAMETER KOP GAMBAR & ATRIBUT DINAMIS (DIPAKAI BERSAMA KEDUA MODE) -->
+        <!-- PANEL PARAMETER KOP GAMBAR & ATRIBUT DINAMIS (SHARED PARAMETERS) -->
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Sisi Kiri: Upload Gambar Kop Surat Utuh -->
             <div class="space-y-3">
@@ -97,7 +108,7 @@
 
                     <!-- Panel Kustomisasi Huruf & Margin -->
                     <div class="pt-3 mt-2 border-t border-slate-200 space-y-2">
-                        <h4 class="text-xs font-bold text-slate-700">⚙— Pengaturan Kustom Layout Halaman</h4>
+                        <h4 class="text-xs font-bold text-slate-700">⚙️ Pengaturan Kustom Layout Halaman</h4>
                         <div class="grid grid-cols-2 gap-2">
                             <label class="block">
                                 <span class="text-slate-500 text-[10px] block mb-0.5">Jenis Huruf (Font)</span>
@@ -155,14 +166,24 @@
             </div>
         </section>
 
-        <!-- ================= PANEL MODE 2: PEMBUAT SOAL AI MATERI ================= -->
+        <!-- ================= PANEL MODE 2: PEMBUAT SOAL AI (MULTIPLE SOURCES) ================= -->
         <section id="panelBuat" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 hidden">
-            <h3 class="text-sm font-bold text-indigo-600 flex items-center gap-1">🤖 Modul Ekstraksi Soal AI</h3>
-            <div class="space-y-1">
-                <label class="block text-xs font-semibold text-slate-600">Tempelkan Teks Materi / Rangkuman Pembelajaran Di Sini:</label>
-                <textarea id="materiInput" rows="5" placeholder="Contoh: Git adalah sistem pengontrol versi terdistribusi... perintah git add untuk staging area... git commit digunakan untuk menyimpan snapshot perubahan..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:outline-indigo-500"></textarea>
+            <h3 class="text-sm font-bold text-indigo-600 flex items-center gap-1">🤖 Modul Ekstraksi & Pembuat Soal AI</h3>
+            
+            <!-- Dual Input: Upload Dokumen Materi atau Tempel Teks -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-slate-600">Opsi A: Unggah File Materi (PDF / Word .docx)</label>
+                    <input type="file" id="materiFileInput" accept=".pdf, .docx" class="w-full border border-slate-200 rounded-xl p-2 text-xs file:bg-slate-100 file:border-0 file:px-2 file:py-1 file:rounded file:text-xs file:font-semibold">
+                    <span id="fileMateriStatus" class="text-[10px] text-slate-400 block mt-0.5">Mendukung ekstraksi otomatis lokal.</span>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-slate-600">Opsi B: Atau Tempel Teks Materi Langsung</label>
+                    <textarea id="materiInput" rows="3" placeholder="Jika tidak upload file, Anda bisa langsung menempel teks materi di sini..." class="w-full border border-slate-200 rounded-xl p-2 text-xs focus:outline-indigo-500"></textarea>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-2 border-t border-slate-50">
                 <label class="block">
                     <span class="text-slate-600 font-semibold block mb-1">Jumlah Soal PG Diinginkan</span>
                     <input type="number" id="generateCountPG" value="5" class="w-full border p-2 rounded-lg text-sm">
@@ -179,11 +200,10 @@
             </div>
         </section>
 
-        <!-- PREVIEW & EDITOR INTERAKTIF (DIPAKAI KEDUA MODE) -->
+        <!-- PREVIEW & EDITOR INTERAKTIF -->
         <section id="previewSection" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-100 px-6 py-3 border-b border-slate-200 flex justify-between items-center">
                 <h3 class="text-sm font-bold text-slate-600" id="previewTitle">Pratinjau Data Soal</h3>
-                <!-- Tombol ini hanya muncul di Mode AI untuk mencetak file tunggal hasil edit -->
                 <button id="exportSingleWordBtn" class="hidden px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer">
                     📝 Cetak Hasil Edit (.DOCX)
                 </button>
@@ -193,7 +213,7 @@
     </main>
 
     <footer class="bg-slate-800 text-slate-400 text-center py-4 text-xs border-t border-slate-700 mt-8">
-        Exam Master Suite Edition | Integrated Client-Side Engine v6.0.
+        Exam Master Suite Edition | Engine v6.5 Client-Side Multi-Format Parser.
     </footer>
 
     <script>
@@ -213,7 +233,9 @@
         const previewTitle = document.getElementById('previewTitle');
         const exportSingleWordBtn = document.getElementById('exportSingleWordBtn');
 
-        // DOM Inputs Mode 2
+        // DOM Inputs Mode 2 (Multi-Source)
+        const materiFileInput = document.getElementById('materiFileInput');
+        const fileMateriStatus = document.getElementById('fileMateriStatus');
         const materiInput = document.getElementById('materiInput');
         const generateCountPG = document.getElementById('generateCountPG');
         const generateCountEssay = document.getElementById('generateCountEssay');
@@ -223,11 +245,12 @@
         let originalPGQuestions = [];
         let originalEssayQuestions = [];
         let optionCountGlobal = 4;
-        let activeTab = "acak"; // acak atau buat
+        let activeTab = "acak"; 
+        let extractedTextFromDocument = ""; // Menyimpan teks hasil bacaan PDF/Word
 
-        const apiKey = 'exam_master_suite_count_v6';
+        const apiKey = 'exam_master_suite_count_v6_5';
 
-        // ================= SISTEM TAB TOGGLE INTERACTION =================
+        // ================= TAB MANAGEMENT =================
         tabAcakBtn.addEventListener('click', () => {
             activeTab = "acak";
             tabAcakBtn.className = "flex-1 py-2.5 text-center text-sm font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-sm";
@@ -247,7 +270,7 @@
             previewSection.classList.add('hidden');
         });
 
-        // ================= SISTEM COUNTER METRICS =================
+        // ================= COUNTER HANDLING =================
         async function loadCounters() {
             const localVal = localStorage.getItem('local_suite_count') || 0;
             document.getElementById('localCounter').textContent = `${localVal} kali`;
@@ -267,7 +290,7 @@
             fetch(`https://api.countapi.xyz/hit/default/${apiKey}`).catch(e => console.log(e));
         }
 
-        // ================= TEMPLATE EXCEL CREATORS =================
+        // ================= TEMPLATE DOWNLOADERS =================
         document.getElementById('downloadTemplateEBtn').addEventListener('click', () => {
             const header = ["Soal", "Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D", "Pilihan E", "Kunci Jawaban"];
             const rowPG = ["Sintaks JavaScript untuk menuliskan text di console adalah...", "print()", "document.write()", "console.log()", "echo()", "response.write()", "C"];
@@ -288,7 +311,61 @@
             XLSX.writeFile(wb, "Template_Ujian_AD.xlsx");
         });
 
-        // ================= CORE MODE 1: MEMBACA FILE EXCEL =================
+        // ================= PARSER LOGIKAL FILE DOKUMEN MATERI (PDF & WORD) =================
+        materiFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileMateriStatus.textContent = "Sedang mengekstrak berkas...";
+            fileMateriStatus.className = "text-[10px] text-indigo-600 font-medium block mt-0.5";
+            extractedTextFromDocument = "";
+
+            const reader = new FileReader();
+
+            if (file.name.endsWith('.docx')) {
+                // Membaca Teks Dokumen Word lokal (.docx)
+                reader.onload = async function(event) {
+                    try {
+                        const arrayBuffer = event.target.result;
+                        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                        extractedTextFromDocument = result.value;
+                        fileMateriStatus.textContent = `✓ Berhasil memuat Word (${extractedTextFromDocument.split(' ').length} kata).`;
+                        fileMateriStatus.className = "text-[10px] text-emerald-600 font-semibold block mt-0.5";
+                    } catch(err) {
+                        fileMateriStatus.textContent = "Gagal memproses file Word.";
+                        fileMateriStatus.className = "text-[10px] text-red-500 block mt-0.5";
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+
+            } else if (file.name.endsWith('.pdf')) {
+                // Membaca Teks Dokumen PDF lokal (.pdf) menggunakan PDF.js
+                reader.onload = async function(event) {
+                    try {
+                        const typedarray = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let textContent = "";
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textObj = await page.getTextContent();
+                            const pageText = textObj.items.map(item => item.str).join(" ");
+                            textContent += pageText + "\n";
+                        }
+                        
+                        extractedTextFromDocument = textContent;
+                        fileMateriStatus.textContent = `✓ Berhasil memuat PDF (${extractedTextFromDocument.split(' ').length} kata).`;
+                        fileMateriStatus.className = "text-[10px] text-emerald-600 font-semibold block mt-0.5";
+                    } catch(err) {
+                        fileMateriStatus.textContent = "Gagal mengekstrak teks PDF.";
+                        fileMateriStatus.className = "text-[10px] text-red-500 block mt-0.5";
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // ================= MODE 1: MEMBACA FILE EXCEL BANK SOAL =================
         excelInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -342,21 +419,22 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // ================= CORE MODE 2: GENERATE SOAL DARI TEKS AI =================
+        // ================= MODE 2: GENERATE SOAL AI (MULTI SOURCE) =================
         processGenerateBtn.addEventListener('click', () => {
-            const materi = materiInput.value.trim();
-            if(!materi) return alert("Silakan masukkan teks materi terlebih dahulu!");
+            // Memprioritaskan teks dari Dokumen Upload, jika kosong baru mengambil dari Textarea Tempel
+            const materi = extractedTextFromDocument.trim() || materiInput.value.trim();
+            if(!materi) return alert("Silakan unggah dokumen PDF/Word atau tempel materi teks terlebih dahulu!");
 
             processGenerateBtn.disabled = true;
-            processGenerateBtn.textContent = "Mengekstrak Soal...";
+            processGenerateBtn.textContent = "Mengekstrak...";
 
             const pgCount = parseInt(generateCountPG.value) || 0;
             const essayCount = parseInt(generateCountEssay.value) || 0;
 
-            const keywords = materi.split(/[ ,.!\n()]+/)
+            const keywords = materi.split(/[ ,.!\n()]+/ )
                                     .filter(w => w.length > 4 && !["adalah", "untuk", "dalam", "yang", "dengan"].includes(w.toLowerCase()))
                                     .map(w => w.replace(/[^a-zA-Z]/g, ''));
-            const uniqueKeywords = [...new Set(keywords)].slice(0, 20);
+            const uniqueKeywords = [...new Set(keywords)].slice(0, 25);
             const kwPool = uniqueKeywords.length > 0 ? uniqueKeywords : ["Komponen", "Prosedur", "Mekanisme", "Sistem", "Fungsi"];
 
             originalPGQuestions = [];
@@ -391,7 +469,7 @@
             }, 600);
         });
 
-        // Merender Panel Editor untuk Memanipulasi Soal Hasil AI Sebelum Dicetak
+        // Merender Editor Interaktif
         function renderEditorUI() {
             previewSection.classList.remove('hidden');
             exportSingleWordBtn.classList.remove('hidden');
@@ -438,7 +516,6 @@
             previewSection.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Helper Utilitas Pengacak Array
         function shuffleArray(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -448,16 +525,15 @@
             return arr;
         }
 
-        // ================= UNIFIED DYNAMIC LAYOUT WORD GENERATOR ENGINE =================
+        // ================= UNIVERSAL WORD LAYOUT ENGINE =================
         async function createDocxBlob(title, pgData, essayData, isAnswerKey = false) {
             const { Document, Paragraph, TextRun, AlignmentType, ImageRun, Table, TableRow, TableCell, BorderStyle, WidthType } = window.docx;
             const children = [];
 
-            // ⚙️ AMBIL PENGATURAN KUSTOM USER DARI PANEL UI SHARED
             const customFont = document.getElementById('fontFamily').value;
             const customSize = parseInt(document.getElementById('fontSize').value) * 2;
             const titleSize = customSize + 2;
-            const customMargin = Math.round(parseFloat(document.getElementById('marginCm').value) * 567); // cm ke twips
+            const customMargin = Math.round(parseFloat(document.getElementById('marginCm').value) * 567);
             const sizeMode = document.getElementById('pageSize').value;
 
             const dxaWidth = Math.round((sizeMode === "F4" ? 215 : 210) * 56.7);
@@ -465,24 +541,16 @@
             const visualKopWidth = sizeMode === "F4" ? 620 : 600;
 
             if (!isAnswerKey) {
-                // 1. Gambar Kop Surat Potongan Utuh (Jika Diupload)
                 const kopGambarFile = document.getElementById('kopGambarInput').files[0];
                 if (kopGambarFile) {
                     try {
                         const bufKop = await kopGambarFile.arrayBuffer();
-                        children.push(
-                            new Paragraph({
-                                alignment: AlignmentType.CENTER,
-                                children: [new ImageRun({ data: bufKop, transformation: { width: visualKopWidth, height: 95 } })],
-                                spacing: { after: 200 }
-                            })
-                        );
+                        children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: bufKop, transformation: { width: visualKopWidth, height: 95 } })], spacing: { after: 200 } }));
                     } catch(e) {}
                 } else {
                     children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "[ BELUM ADA FILE GAMBAR KOP SURAT ]", bold: true, color: "FF0000", size: customSize, font: customFont })], spacing: { after: 200 } }));
                 }
 
-                // 2. Sub-Header Judul Ujian Otomatis
                 const hUjian = document.getElementById('ujianHeader').value;
                 const hTahun = document.getElementById('ujianTahun').value;
                 children.push(
@@ -490,7 +558,6 @@
                     new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: hTahun, bold: true, size: titleSize, font: customFont })], spacing: { after: 200 } })
                 );
 
-                // 3. Tabel Atribut Informasi Ujian (Borderless)
                 const mapel = document.getElementById('attrMapel').value || "-";
                 const kelas = document.getElementById('attrKelas').value || "-";
                 const hari = document.getElementById('attrHari').value || "";
@@ -519,8 +586,6 @@
                     ]
                 });
                 children.push(attrTable);
-
-                // Garis Pembatas Tebal Horizontal Bawah Kop
                 children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "___________________________________________________________________________", bold: true, font: customFont, size: customSize })], spacing: { after: 300 } }));
             } else {
                 children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: title.toUpperCase(), bold: true, size: titleSize, font: customFont })], spacing: { after: 300 } }));
@@ -528,7 +593,6 @@
 
             const labels = ['A', 'B', 'C', 'D', 'E'];
 
-            // ADAPTIF LAYOUT LOGIC: KELOMPOK PILIHAN GANDA
             if (pgData.length > 0) {
                 if (!isAnswerKey) {
                     children.push(new Paragraph({ children: [new TextRun({ text: "A. PILIHAN GANDA", bold: true, font: customFont, size: titleSize })], spacing: { before: 100, after: 150 } }));
@@ -540,7 +604,6 @@
 
                         let totalOptLen = q.shuffledOptions.reduce((acc, o) => acc + (o.teks || "").toString().length, 0);
 
-                        // Layout 1: Ultra Hemat (1 Baris Sejajar A-E)
                         if (totalOptLen < 80) {
                             const runChildren = [];
                             q.shuffledOptions.forEach((opt, oIdx) => {
@@ -554,7 +617,6 @@
                             for (let t = 1; t < q.shuffledOptions.length; t++) { tabStops.push({ type: "left", position: t * colWidth }); }
                             children.push(new Paragraph({ tabStops, indent: { left: 360 }, children: runChildren, spacing: { after: 60 } }));
                         
-                        // Layout 2: Sedang (2 Kolom Berdampingan)
                         } else if (totalOptLen >= 80 && totalOptLen < 160) {
                             for(let i = 0; i < q.shuffledOptions.length; i += 2) {
                                 const runChildren = [new TextRun({ text: `${labels[i]}. `, bold: true, font: customFont, size: customSize }), new TextRun({ text: q.shuffledOptions[i].teks, font: customFont, size: customSize })];
@@ -564,14 +626,12 @@
                                 }
                                 children.push(new Paragraph({ tabStops: [{ type: "left", position: 4600 }], indent: { left: 360 }, children: runChildren, spacing: { after: 60 } }));
                             }
-                        // Layout 3: Kalimat Panjang (1 Kolom per baris ke bawah)
                         } else {
                             q.shuffledOptions.forEach((opt, oIdx) => {
                                 children.push(new Paragraph({ indent: { left: 720, hanging: 360 }, children: [new TextRun({ text: `${labels[oIdx]}. `, bold: true, font: customFont, size: customSize }), new TextRun({ text: opt.teks, font: customFont, size: customSize })], spacing: { after: 60 } }));
                             });
                         }
                     } else {
-                        // Kunci Jawaban Kertas Hemat (2 Kolom Menyamping)
                         if (index % 2 === 0) {
                             const runChildren = [new TextRun({ text: `Nomor ${index + 1} : `, font: customFont, size: customSize }), new TextRun({ text: ` ${q.newKey} `, bold: true, font: customFont, size: customSize })];
                             if (index + 1 < pgData.length) {
@@ -585,7 +645,6 @@
                 });
             }
 
-            // KELOMPOK ESSAY (Tetap di Urutan Akhir)
             if (essayData.length > 0 && !isAnswerKey) {
                 children.push(new Paragraph({ children: [new TextRun({ text: "B. ESSAY", bold: true, font: customFont, size: titleSize })], spacing: { before: 300, after: 150 } }));
                 essayData.forEach((eq, eIndex) => {
@@ -607,14 +666,12 @@
             return await window.docx.Packer.toBlob(doc);
         }
 
-        // ================= ACTION HANDLE: EKSPOR ZIP ACURAN (MODE 1) =================
+        // Action Handle: Mode 1 (ZIP Acak)
         processAcakBtn.addEventListener('click', async () => {
             const numPackets = parseInt(packetCount.value);
             const zip = new JSZip();
             const labels = ['A', 'B', 'C', 'D', 'E'];
-
             processAcakBtn.disabled = true;
-            processAcakBtn.textContent = "Mengemas...";
 
             for (let p = 0; p < numPackets; p++) {
                 const packetLetter = String.fromCharCode(65 + p);
@@ -645,19 +702,13 @@
 
                 incrementCounters();
                 processAcakBtn.disabled = false;
-                processAcakBtn.textContent = "📝 Acak & Ekspor ke ZIP";
             });
         });
 
-        // ================= ACTION HANDLE: CETAK SINGLE WORD HASIL EDIT AI (MODE 2) =================
+        // Action Handle: Mode 2 (Cetak Tunggal dari AI)
         exportSingleWordBtn.addEventListener('click', async () => {
             exportSingleWordBtn.disabled = true;
-            exportSingleWordBtn.textContent = "Mencetak...";
-
-            // Memetakan struktur array hasil editor ke visual generator engine
-            const formattedPG = originalPGQuestions.map(q => {
-                return { soal: q.soal, shuffledOptions: q.opsi, newKey: q.kunciOriginal };
-            });
+            const formattedPG = originalPGQuestions.map(q => { return { soal: q.soal, shuffledOptions: q.opsi, newKey: q.kunciOriginal }; });
 
             try {
                 const blob = await createDocxBlob("Hasil Pembuatan Soal AI", formattedPG, originalEssayQuestions, false);
@@ -667,13 +718,9 @@
                 document.body.appendChild(element);
                 element.click();
                 document.body.removeChild(element);
-
                 incrementCounters();
-            } catch(e) { alert("Gagal mengekspor berkas: " + e.message); }
-            finally {
-                exportSingleWordBtn.disabled = false;
-                exportSingleWordBtn.textContent = "📝 Cetak Berkas Word (.DOCX)";
-            }
+            } catch(e) { alert(e.message); }
+            finally { exportSingleWordBtn.disabled = false; }
         });
     </script>
 </body>
