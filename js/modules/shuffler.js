@@ -2,8 +2,7 @@ import { shuffleArray } from '../utils.js';
 
 let originalPGQuestions = [];
 let originalEssayQuestions = [];
-let logoKiriBase64 = "";
-let logoKananBase64 = "";
+let kopGambarBase64 = ""; // Menampung Base64 dari Upload Kop Surat
 
 export function initShuffler() {
     const excelInput = document.getElementById('excelInput');
@@ -14,30 +13,27 @@ export function initShuffler() {
     const badgeTotalSoal = document.getElementById('badgeTotalSoal');
     const downloadEBtn = document.getElementById('downloadTemplateEBtn');
     const downloadDBtn = document.getElementById('downloadTemplateDBtn');
-
-    const logoKiriInput = document.getElementById('logoKiriInput');
-    const logoKananInput = document.getElementById('logoKananInput');
+    const kopGambarInput = document.getElementById('kopGambarInput');
 
     if (!excelInput) return;
 
-    // Handler Upload Logo
-    if (logoKiriInput) {
-        logoKiriInput.addEventListener('change', (e) => {
+    // Handler Upload Gambar Kop Surat
+    if (kopGambarInput) {
+        kopGambarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (evt) => { logoKiriBase64 = evt.target.result; updatePreview(); };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    if (logoKananInput) {
-        logoKananInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => { logoKananBase64 = evt.target.result; updatePreview(); };
+                reader.onload = (evt) => { 
+                    kopGambarBase64 = evt.target.result;
+                    
+                    // Update Pratinjau Kecil di Form
+                    const previewBox = document.getElementById('kopPreviewContainer');
+                    if(previewBox) {
+                        previewBox.innerHTML = `<img src="${kopGambarBase64}" class="max-h-16 mx-auto rounded object-contain" />`;
+                    }
+                    
+                    updatePreview(); 
+                };
                 reader.readAsDataURL(file);
             }
         });
@@ -116,7 +112,7 @@ export function initShuffler() {
         }
     }
 
-    // Handle Proses Acak & Buat File Word (.docx) Valid
+    // Handle Proses Acak & Buat File Word (.docx)
     processAcakBtn.addEventListener('click', async () => {
         if (originalPGQuestions.length === 0 && originalEssayQuestions.length === 0) {
             alert("Belum ada data soal yang dimuat!");
@@ -127,7 +123,7 @@ export function initShuffler() {
         const zip = new JSZip();
 
         processAcakBtn.disabled = true;
-        processAcakBtn.textContent = "⏳ Memproses Dokumen Word Native...";
+        processAcakBtn.textContent = "⏳ Memproses Dokumen Word...";
 
         try {
             for (let p = 0; p < packetCount; p++) {
@@ -140,7 +136,6 @@ export function initShuffler() {
 
                 const htmlString = generateFullExamHTML(shuffledPG, shuffledEssay, packetLetter);
 
-                // Menggunakan htmlDocx untuk mengkonversi HTML ke .docx murni yang valid
                 let convertedDocx;
                 if (window.htmlDocx) {
                     convertedDocx = window.htmlDocx.asBlob(htmlString, {
@@ -148,7 +143,6 @@ export function initShuffler() {
                         margins: { top: 720, right: 720, bottom: 720, left: 720 }
                     });
                 } else {
-                    // Fallback jika lib belum termuat
                     convertedDocx = new Blob([htmlString], { type: 'application/msword' });
                 }
 
@@ -170,7 +164,6 @@ export function initShuffler() {
     });
 }
 
-// Layout Pilihan Ganda (Responsif & Rapi)
 function getOpsiLayoutHtml(opsiArray) {
     const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
     const labels = ["a", "b", "c", "d", "e"];
@@ -194,7 +187,6 @@ function getOpsiLayoutHtml(opsiArray) {
     }
 }
 
-// Render Preview Ke Layar
 function renderPreviewSoal(pgList, essayList, containerElement) {
     containerElement.innerHTML = generateFullExamHTML(pgList, essayList, "A (Pratinjau)");
 
@@ -209,22 +201,24 @@ function renderPreviewSoal(pgList, essayList, containerElement) {
     }
 }
 
-// Generasi HTML Dokumen Presisi Sesuai Gambar Kop Surat
+// Generasi HTML Dokumen Menggunakan GAMBAR KOP UTUH
 function generateFullExamHTML(pgList, essayList, packetName) {
-    const instansi1 = document.getElementById('kopInstansi1')?.value || "PEMERINTAH PROVINSI KALIMANTAN BARAT";
-    const instansi2 = document.getElementById('kopInstansi2')?.value || "DINAS PENDIDIKAN DAN KEBUDAYAAN";
-    const sekolah = document.getElementById('kopSekolah')?.value || "SMK NEGERI 1 SEMPARUK";
-    const alamat = document.getElementById('kopAlamat')?.value || "Jalan Pendidikan Nomor 19 Kecamatan Semparuk Kabupaten Sambas 79453";
-    const email = document.getElementById('kopEmail')?.value || "smkn1_semparuk@yahoo.co.id";
-    const nomorKop = document.getElementById('kopNomor')?.value || "NSS: 401130113001  NPSN: 30107298  NIS: 1301120001";
-
-    const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP TAHUN 2022/2023";
+    const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP";
     const mapel = document.getElementById('metaMapel')?.value || "Pemrograman Web";
     const kelas = document.getElementById('metaKelas')?.value || "XI RPL 1, 2";
     const waktu = document.getElementById('metaWaktu')?.value || "-";
 
-    const imgKiri = logoKiriBase64 ? `<img src="${logoKiriBase64}" style="width:70px; height:auto;"/>` : `<div style="font-weight:bold; font-size:9pt;">[LOGO KIRI]</div>`;
-    const imgKanan = logoKananBase64 ? `<img src="${logoKananBase64}" style="width:70px; height:auto;"/>` : `<div style="font-weight:bold; font-size:9pt;">[LOGO KANAN]</div>`;
+    // Elemen Kop Surat (Memuat Gambar Utama atau Placeholder jika belum diunggah)
+    let kopSection = '';
+    if (kopGambarBase64) {
+        kopSection = `<div style="text-align:center; margin-bottom:10px;"><img src="${kopGambarBase64}" style="width:100%; max-width:680px; height:auto;"/></div>`;
+    } else {
+        kopSection = `
+        <div style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 10px; text-align: center;">
+            <div style="font-size:12pt; font-weight:bold;">[ KOP SURAT SEKOLAH ]</div>
+            <div style="font-size:9pt; color:#666;">(Unggah gambar Kop Surat pada form di atas)</div>
+        </div>`;
+    }
 
     let html = `
     <!DOCTYPE html>
@@ -234,30 +228,14 @@ function generateFullExamHTML(pgList, essayList, packetName) {
         <style>
             body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.2; }
             table { border-collapse: collapse; width: 100%; }
-            .border-double { border-bottom: 4px double #000; margin-bottom: 8px; padding-bottom: 4px; }
             .border-single { border-bottom: 2px solid #000; margin-bottom: 12px; }
             .text-center { text-align: center; }
             .font-bold { font-weight: bold; }
         </style>
     </head>
     <body>
-        <!-- KOP SURAT PRESISI -->
-        <div class="border-double">
-            <table style="width:100%;">
-                <tr>
-                    <td style="width:15%; text-align:center; vertical-align:middle;">${imgKiri}</td>
-                    <td style="width:70%; text-align:center; vertical-align:middle;">
-                        <div style="font-size:11pt; font-weight:bold;">${instansi1}</div>
-                        <div style="font-size:11pt; font-weight:bold;">${instansi2}</div>
-                        <div style="font-size:13pt; font-weight:bold; margin:2px 0;">${sekolah}</div>
-                        <div style="font-size:8.5pt;">${alamat}</div>
-                        <div style="font-size:8.5pt; text-decoration:underline; color:blue;">${email}</div>
-                        <div style="font-size:8pt; font-weight:bold; margin-top:3px;">${nomorKop}</div>
-                    </td>
-                    <td style="width:15%; text-align:center; vertical-align:middle;">${imgKanan}</td>
-                </tr>
-            </table>
-        </div>
+        <!-- KOP SURAT BERBENTUK GAMBAR UTUH -->
+        ${kopSection}
 
         <!-- JUDUL & METADATA -->
         <div class="text-center font-bold" style="font-size:12pt; margin-bottom:12px; text-decoration:underline;">
