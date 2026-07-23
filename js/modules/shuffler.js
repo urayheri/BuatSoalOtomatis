@@ -165,37 +165,49 @@ export function initShuffler() {
     });
 }
 
-// FORMAT PILIHAN GANDA TANPA TABEL (PARAGRAF BIASA DENGAN INDENTASI MASUK)
-function renderOpsiTanpaTabel(opsiArray) {
+// LOGIKA LAYOUT OPSI ADAPTIF (1 BARIS, 2 BARIS, ATAU KE BAWAH)
+function renderOpsiAdaptif(opsiArray) {
     const labels = ["A", "B", "C", "D", "E"];
     
-    return opsiArray.map((opt, idx) => {
-        return `<p class="opsi-item">${labels[idx]}. ${opt.teks}</p>`;
-    }).join('');
-}
+    // Hitung panjang teks opsi terpanjang
+    const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
 
-function renderPreviewSoal(pgList, essayList, containerElement) {
-    containerElement.innerHTML = generateFullExamHTML(pgList, essayList, "A (Pratinjau)");
-
-    if (window.renderMathInElement) {
-        renderMathInElement(containerElement, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-        });
+    // KONDISI 1: Sangat Pendek (misal: angka, kata pendek) -> TAMPIL 1 BARIS HORIZONTAL
+    if (maxLen <= 12) {
+        let items = opsiArray.map((opt, idx) => `
+            <span style="display: inline-block; margin-right: 24pt; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
+                <b>${labels[idx]}.</b> ${opt.teks}
+            </span>
+        `).join('');
+        return `<div style="margin-left: 24pt; margin-top: 2pt; margin-bottom: 4pt;">${items}</div>`;
+    } 
+    // KONDISI 2: Sedang -> TAMPIL 2 BARIS / 2 KOLOM
+    else if (maxLen <= 30) {
+        let items = opsiArray.map((opt, idx) => `
+            <div style="display: inline-block; width: 45%; vertical-align: top; margin-bottom: 2pt; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
+                <b>${labels[idx]}.</b> ${opt.teks}
+            </div>
+        `).join('');
+        return `<div style="margin-left: 24pt; margin-top: 2pt; margin-bottom: 4pt;">${items}</div>`;
+    } 
+    // KONDISI 3: Panjang -> TAMPIL MENURUN PER BARIS
+    else {
+        return opsiArray.map((opt, idx) => `
+            <div style="margin-left: 24pt; margin-bottom: 2pt; text-align: justify; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
+                <b>${labels[idx]}.</b> ${opt.teks}
+            </div>
+        `).join('');
     }
 }
 
-// GENERASI HTML DOKUMEN (TIMES NEW ROMAN 12PT, RATA KIRI-KANAN / JUSTIFY, KOP PROPORSIONAL)
+// GENERASI HTML DOKUMEN FULL TIMES NEW ROMAN 12PT & JUSTIFY
 function generateFullExamHTML(pgList, essayList, packetName) {
     const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP";
     const mapel = document.getElementById('metaMapel')?.value || "Pemrograman Web";
     const kelas = document.getElementById('metaKelas')?.value || "XI RPL 1, 2";
     const waktu = document.getElementById('metaWaktu')?.value || "-";
 
-    // KOP SURAT PRESISI PROPORSIONAL
+    // ELEMEN KOP SURAT
     let kopSection = '';
     if (kopGambarBase64) {
         kopSection = `
@@ -204,9 +216,9 @@ function generateFullExamHTML(pgList, essayList, packetName) {
         </div>`;
     } else {
         kopSection = `
-        <div style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 12pt; text-align: center;">
+        <div style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 12pt; text-align: center; font-family: 'Times New Roman', Times, serif;">
             <div style="font-size: 14pt; font-weight: bold;">[ KOP SURAT SEKOLAH ]</div>
-            <div style="font-size: 10pt; color: #555;">(Unggah gambar Kop Surat di menu atas)</div>
+            <div style="font-size: 10pt; color: #555;">(Unggah gambar Kop Surat pada menu di atas)</div>
         </div>`;
     }
 
@@ -220,12 +232,19 @@ function generateFullExamHTML(pgList, essayList, packetName) {
                 size: A4;
                 margin: 2cm;
             }
+            * {
+                font-family: 'Times New Roman', Times, serif !important;
+            }
             body { 
                 font-family: 'Times New Roman', Times, serif !important; 
                 font-size: 12pt !important; 
                 color: #000; 
                 line-height: 1.25; 
-                text-align: justify; /* RATA KIRI KANAN */
+                text-align: justify;
+            }
+            p, div, td, span, b {
+                font-family: 'Times New Roman', Times, serif !important;
+                font-size: 12pt !important;
             }
             p {
                 margin: 0 0 4pt 0;
@@ -237,20 +256,16 @@ function generateFullExamHTML(pgList, essayList, packetName) {
                 margin-bottom: 4pt;
                 text-align: justify;
             }
-            .opsi-item {
-                margin-left: 24pt;
-                margin-bottom: 2pt;
-                text-align: justify;
-            }
             .header-info {
                 width: 100%;
                 border-collapse: collapse;
                 margin-bottom: 8pt;
-                font-size: 12pt;
+                font-size: 12pt !important;
             }
             .header-info td {
                 padding: 1pt 0;
                 vertical-align: top;
+                font-size: 12pt !important;
             }
             .border-line {
                 border-bottom: 1.5pt solid #000;
@@ -262,8 +277,8 @@ function generateFullExamHTML(pgList, essayList, packetName) {
         <!-- KOP SURAT -->
         ${kopSection}
 
-        <!-- JUDUL & METADATA -->
-        <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 10pt; text-transform: uppercase; text-decoration: underline;">
+        <!-- JUDUL & METADATA UJIAN -->
+        <div style="text-align: center; font-weight: bold; font-size: 12pt !important; margin-bottom: 10pt; text-transform: uppercase; text-decoration: underline;">
             ${judul} (PAKET ${packetName})
         </div>
 
@@ -296,7 +311,7 @@ function generateFullExamHTML(pgList, essayList, packetName) {
 
     pgList.forEach((q, idx) => {
         const shuffledOpsi = shuffleArray(q.opsi);
-        const opsiContent = renderOpsiTanpaTabel(shuffledOpsi);
+        const opsiContent = renderOpsiAdaptif(shuffledOpsi);
         const gambarHtml = q.gambar ? `<div style="margin: 4pt 0 4pt 24pt;"><img src="${q.gambar}" style="max-width: 250px; height: auto;"/></div>` : '';
 
         html += `
@@ -305,9 +320,7 @@ function generateFullExamHTML(pgList, essayList, packetName) {
                 <b>${idx + 1}.</b> ${q.soal}
             </div>
             ${gambarHtml}
-            <div>
-                ${opsiContent}
-            </div>
+            ${opsiContent}
         </div>`;
     });
 
@@ -328,7 +341,6 @@ function generateFullExamHTML(pgList, essayList, packetName) {
     html += `</div></body></html>`;
     return html;
 }
-
 function downloadExcelTemplate(optionCount) {
     const headers = ["Pertanyaan / Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D"];
     if (optionCount === 5) headers.push("Opsi E");
