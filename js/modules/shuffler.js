@@ -4,6 +4,25 @@ let originalPGQuestions = [];
 let originalEssayQuestions = [];
 let kopGambarBase64 = "";
 
+// 1. DEFINISI FUNGSI RENDER PREVIEW DI ATAS AGAR SELALU TERSEDIA
+function renderPreviewSoal(pgList, essayList, container) {
+    if (!container) return;
+
+    // Generasi tampilan pratinjau yang sama dengan dokumen Word
+    const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER/PRATINJAU");
+    
+    container.innerHTML = `
+        <div class="bg-white text-slate-900 p-6 rounded-xl shadow-inner border border-slate-200 overflow-x-auto" style="min-height: 400px;">
+            ${htmlPreview}
+        </div>
+    `;
+
+    // Render MathJax jika ada formula matematika
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
+    }
+}
+
 export function initShuffler() {
     const excelInput = document.getElementById('excelInput');
     const fileStatus = document.getElementById('fileStatus');
@@ -96,11 +115,11 @@ export function initShuffler() {
                     }
                 }
 
-                previewSection.classList.remove('hidden');
-                if (badgeTotalSoal) {
-                    badgeTotalSoal.textContent = `${originalPGQuestions.length} PG / ${originalEssayQuestions.length} Essay`;
-                }
+                if (previewSection) previewSection.classList.remove('hidden');
+                if (badgeTotalSoal) badgeTotalSoal.textContent = `${originalPGQuestions.length} PG / ${originalEssayQuestions.length} Essay`;
+                
                 updatePreview();
+                
                 if (processAcakBtn) processAcakBtn.disabled = false;
 
             } catch (err) {
@@ -169,33 +188,11 @@ export function initShuffler() {
     }
 }
 
-// FUNGSI UNTUK MERENDER PRATINJAU SOAL PADA PRATINJAU WEB
-function renderPreviewSoal(pgList, essayList, container) {
-    if (!container) return;
-
-    // Memanfaatkan generator HTML utama agar hasil tampilan web presisi dengan Word
-    const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER");
-    
-    container.innerHTML = `
-        <div class="bg-white text-black p-6 rounded-lg shadow-md border border-slate-300" style="font-family: 'Times New Roman', Times, serif;">
-            ${htmlPreview}
-        </div>
-    `;
-
-    // Render ulang MathJax jika terdapat rumus matematika
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
-    }
-}
-
-// LOGIKA LAYOUT OPSI ADAPTIF (1 BARIS, 2 BARIS, ATAU KE BAWAH)
+// LOGIKA LAYOUT OPSI ADAPTIF
 function renderOpsiAdaptif(opsiArray) {
     const labels = ["A", "B", "C", "D", "E"];
-    
-    // Hitung panjang teks opsi terpanjang
     const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
 
-    // KONDISI 1: Sangat Pendek (misal: angka, kata pendek) -> TAMPIL 1 BARIS HORIZONTAL
     if (maxLen <= 12) {
         let items = opsiArray.map((opt, idx) => `
             <span style="display: inline-block; margin-right: 24pt; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
@@ -204,7 +201,6 @@ function renderOpsiAdaptif(opsiArray) {
         `).join('');
         return `<div style="margin-left: 24pt; margin-top: 2pt; margin-bottom: 4pt;">${items}</div>`;
     } 
-    // KONDISI 2: Sedang -> TAMPIL 2 BARIS / 2 KOLOM
     else if (maxLen <= 30) {
         let items = opsiArray.map((opt, idx) => `
             <div style="display: inline-block; width: 45%; vertical-align: top; margin-bottom: 2pt; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
@@ -213,7 +209,6 @@ function renderOpsiAdaptif(opsiArray) {
         `).join('');
         return `<div style="margin-left: 24pt; margin-top: 2pt; margin-bottom: 4pt;">${items}</div>`;
     } 
-    // KONDISI 3: Panjang -> TAMPIL MENURUN PER BARIS
     else {
         return opsiArray.map((opt, idx) => `
             <div style="margin-left: 24pt; margin-bottom: 2pt; text-align: justify; font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
@@ -230,7 +225,6 @@ function generateFullExamHTML(pgList, essayList, packetName) {
     const kelas = document.getElementById('metaKelas')?.value || "XI RPL 1, 2";
     const waktu = document.getElementById('metaWaktu')?.value || "-";
 
-    // ELEMEN KOP SURAT
     let kopSection = '';
     if (kopGambarBase64) {
         kopSection = `
@@ -251,13 +245,8 @@ function generateFullExamHTML(pgList, essayList, packetName) {
     <head>
         <meta charset="utf-8">
         <style>
-            @page {
-                size: A4;
-                margin: 2cm;
-            }
-            * {
-                font-family: 'Times New Roman', Times, serif !important;
-            }
+            @page { size: A4; margin: 2cm; }
+            * { font-family: 'Times New Roman', Times, serif !important; }
             body { 
                 font-family: 'Times New Roman', Times, serif !important; 
                 font-size: 12pt !important; 
@@ -269,10 +258,7 @@ function generateFullExamHTML(pgList, essayList, packetName) {
                 font-family: 'Times New Roman', Times, serif !important;
                 font-size: 12pt !important;
             }
-            p {
-                margin: 0 0 4pt 0;
-                text-align: justify;
-            }
+            p { margin: 0 0 4pt 0; text-align: justify; }
             .soal-text {
                 margin-left: 24pt;
                 text-indent: -24pt;
@@ -297,10 +283,8 @@ function generateFullExamHTML(pgList, essayList, packetName) {
         </style>
     </head>
     <body>
-        <!-- KOP SURAT -->
         ${kopSection}
 
-        <!-- JUDUL & METADATA UJIAN -->
         <div style="text-align: center; font-weight: bold; font-size: 12pt !important; margin-bottom: 10pt; text-transform: uppercase; text-decoration: underline;">
             ${judul} (PAKET ${packetName})
         </div>
@@ -328,7 +312,6 @@ function generateFullExamHTML(pgList, essayList, packetName) {
 
         <p style="font-weight: bold; margin-bottom: 10pt;">Pilihlah jawaban berikut dengan benar!</p>
 
-        <!-- DAFTAR SOAL PG -->
         <div>
     `;
 
