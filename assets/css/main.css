@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #f8fafc;
+    color: #334155;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+}
+
+/* Custom Animations */
+@keyframes floatSlow {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-6px) rotate(1deg); }
+}
+.animate-float {
+    animation: floatSlow 4s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 10px rgba(5, 150, 105, 0.3)); }
+    50% { opacity: 0.9; filter: drop-shadow(0 0 20px rgba(5, 150, 105, 0.6)); }
+}
+.animate-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+
+/* Chatbot Popup Animation */
+.chat-popup-enter {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chat-popup-enter-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+/* ==========================================
+   ANIMASI GELOMBANG (WAVE ANIMATION)
+   ========================================== */
+
+@keyframes moveWaveSlow {
+    0% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-25%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes moveWaveFast {
+    0% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(-35%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.animate-wave-slow {
+    animation: moveWaveSlow 12s ease-in-out infinite;
+}
+
+.animate-wave-fast {
+    animation: moveWaveFast 7s ease-in-out infinite;
+}

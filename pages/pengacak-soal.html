@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mode 1: Pengacak Paket Soal - Asisten Guru Indonesia</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Modul Pengacak Paket Soal Ujian Otomatis dari file Excel Master secara lokal dan aman.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍🏫</text></svg>">
+
+    <!-- Tailwind CSS & Font -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/css/main.css">
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body class="font-['Plus_Jakarta_Sans'] bg-slate-900 text-slate-100 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- HEADER NAVIGATION -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <a href="../index.html" class="flex items-center gap-2 group text-slate-300 hover:text-emerald-400 transition-colors text-xs font-semibold">
+                <span class="text-base">←</span> Kembali ke Beranda
+            </a>
+            <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-400 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Mode 1: Pengacak Paket Soal
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE CONTAINER -->
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-1 space-y-8">
+
+        <!-- TITLE HERO -->
+        <div class="space-y-2 text-center sm:text-left">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center justify-center sm:justify-start gap-3">
+                <span>📊</span> Pengacak Paket Soal Ujian Excel
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                Unggah berkas master Excel Anda, tentukan jumlah paket acakan, dan unduh hasil acakan secara otomatis dalam format berkas ZIP / Word (.docx).
+            </p>
+        </div>
+
+        <!-- UPLOAD DROPZONE -->
+        <div class="bg-slate-950 border-2 border-dashed border-slate-800 hover:border-emerald-500/80 rounded-2xl p-8 text-center transition-all relative cursor-pointer group shadow-xl">
+            <input type="file" id="excelInput" accept=".xlsx, .xls" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+            <div class="space-y-3">
+                <div class="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-3xl group-hover:scale-110 transition-transform">
+                    📄
+                </div>
+                <div>
+                    <span id="lblDropExcel" class="text-sm font-bold text-white block">Pilih atau Seret Berkas Excel Master Ke Sini</span>
+                    <span id="fileStatus" class="text-xs text-slate-400 block mt-1">Mendukung format tabel data soal (.xlsx / .xls)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PARAMETER & TEMPLATE GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- PARAMETER ACAKAN -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-lg">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2">
+                    Pengaturan Acakan Paket
+                </h3>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1.5">Jumlah Paket Acak</label>
+                        <select id="packetCount" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                            <option value="2">2 Paket Berbeda (Paket A, Paket B)</option>
+                            <option value="3">3 Paket Berbeda (Paket A, B, C)</option>
+                            <option value="4">4 Paket Multi-Acak</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="block font-semibold text-slate-400 mb-1">Maks. Soal PG</label>
+                            <input type="number" id="limitCountPG" placeholder="Semua" min="1" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-center font-bold text-white focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-400 mb-1">Maks. Uraian</label>
+                            <input type="number" id="limitCountEssay" placeholder="Semua" min="1" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-center font-bold text-white focus:border-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="processAcakBtn" disabled class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-slate-950 font-extrabold rounded-xl transition-all text-xs cursor-pointer shadow-lg shadow-emerald-500/10">
+                    📝 Acak & Ekspor ke ZIP
+                </button>
+            </div>
+
+            <!-- UNDUH TEMPLATE MASTER -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-lg flex flex-col justify-between">
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2">
+                        Master Template Excel
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Belum memiliki format berkas yang sesuai? Unduh *template* resmi untuk memudahkan pengisian data soal.
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <button id="downloadTemplateEBtn" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-200 font-semibold p-3 rounded-xl text-xs transition-all flex justify-between items-center cursor-pointer">
+                        <span>📥 Template SMA/SMK (Opsi A-E)</span>
+                    </button>
+                    <button id="downloadTemplateDBtn" class="w-full text-left bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-200 font-semibold p-3 rounded-xl text-xs transition-all flex justify-between items-center cursor-pointer">
+                        <span>📥 Template SD/SMP (Opsi A-D)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRATINJAU DATA SOAL -->
+        <section id="previewSection" class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-xs">Pratinjau Data Soal Terbaca</h3>
+                <span id="badgeTotalSoal" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full">0 Soal</span>
+            </div>
+            <div id="soalContainer" class="space-y-3 max-h-[400px] overflow-y-auto text-xs pr-1 divide-y divide-slate-800 text-slate-300"></div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>Asisten Guru Indonesia © 2026 | Modul Pengacak Soal Ujian</p>
+    </footer>
+
+    <!-- LOGIKA MODULE -->
+    <script type="module" src="../js/modules/shuffler.js"></script>
+</body>
+</html>

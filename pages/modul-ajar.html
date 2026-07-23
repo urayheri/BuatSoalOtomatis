@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mode 3: Perumus Modul Ajar Merdeka - Asisten Guru Indonesia</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Modul Perumus Modul Ajar & RPP Kurikulum Merdeka Otomatis Berbasis AI untuk Guru Indonesia.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍🏫</text></svg>">
+
+    <!-- Tailwind CSS & Font -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/css/main.css">
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+</head>
+<body class="font-['Plus_Jakarta_Sans'] bg-slate-900 text-slate-100 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- HEADER NAVIGATION -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <a href="../index.html" class="flex items-center gap-2 group text-slate-300 hover:text-emerald-400 transition-colors text-xs font-semibold">
+                <span class="text-base">←</span> Kembali ke Beranda
+            </a>
+            <div class="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full text-purple-400 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                Mode 3: Perumus Modul Ajar
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE CONTAINER -->
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-1 space-y-8">
+
+        <!-- TITLE HERO -->
+        <div class="space-y-2 text-center sm:text-left">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center justify-center sm:justify-start gap-3">
+                <span>📚</span> Perumus Modul Ajar Kurikulum Merdeka
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                Isi identitas administrasi dan parameter pembelajaran, lalu biarkan AI menyusun perangkat ajar mendalam (*Deep Learning*) yang siap diekspor ke Word (.docx).
+            </p>
+        </div>
+
+        <!-- FORM CARD -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl text-xs">
+            
+            <!-- ADMINISTRASI SEKOLAH -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-slate-300 text-xs uppercase tracking-wider border-b border-slate-800 pb-2 flex items-center gap-2">
+                    <span>🏛️</span> Data Administrasi Satuan Pendidikan
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Nama Guru Mata Pelajaran</label>
+                        <input type="text" id="inputNamaGuru" value="U. Heri Mukti, S.Tr.Kom." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">NIP Guru</label>
+                        <input type="text" id="inputNipGuru" value="-" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Nama Kepala Sekolah</label>
+                        <input type="text" id="inputNamaKepsek" value="Suherwan, S.Pd." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">NIP Kepala Sekolah</label>
+                        <input type="text" id="inputNipKepsek" value="19681020 199802 1 005" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block font-semibold text-slate-400 mb-1">Nama Satuan Pendidikan (Sekolah)</label>
+                        <input type="text" id="inputNamaSekolah" value="SMKN 1 Semparuk" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAMETER PEMBELAJARAN -->
+            <div class="space-y-4 pt-2">
+                <h3 class="font-bold text-slate-300 text-xs uppercase tracking-wider border-b border-slate-800 pb-2 flex items-center gap-2">
+                    <span>📖</span> Parameter Instruksional Pembelajaran
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Nama Mata Pelajaran</label>
+                        <input type="text" id="modulMapel" value="Pemrograman Web" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Pilih Jenjang & Fase</label>
+                        <select id="modulFase" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                            <option value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</option>
+                            <option value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</option>
+                            <option value="Fase C (Kelas 5-6 SD)">Fase C (Kelas 5-6 SD)</option>
+                            <option value="Fase D (Kelas 7-9 SMP)">Fase D (Kelas 7-9 SMP)</option>
+                            <option value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</option>
+                            <option value="Fase F (Kelas 11-12 SMA/SMK)" selected>Fase F (Kelas 11-12 SMA/SMK)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Topik / Materi Pokok</label>
+                        <input type="text" id="modulTopik" value="Pengenalan Sintaks Dasar HTML" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-400 mb-1">Alokasi Waktu (JP)</label>
+                        <input type="text" id="modulWaktu" value="4 JP (4 x 45 Menit)" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 font-medium text-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-amber-400 mb-1">🏢 Kondisi Fasilitas & Infrastruktur Sekolah</label>
+                    <select id="modulFasilitas" class="w-full bg-slate-900 border border-amber-500/30 rounded-xl p-2.5 font-medium text-white focus:border-amber-500 focus:outline-none">
+                        <option value="Digital Lengkap (Akses internet cepat, proyektor, komputer praktek siswa memadai)">Fasilitas Lengkap Kota (Internet + Lab Komputer Lengkap)</option>
+                        <option value="Fasilitas Sedang (Proyektor terbatas, komputer bergantian, internet kadang tidak stabil)" selected>Fasilitas Sedang (Komputer Bergantian / Internet Terbatas)</option>
+                        <option value="Minim & Pelosok 3T (Tidak ada internet konstan, berbasis media cetak/buku paket)">Sekolah Pelosok / 3T (Tanpa Internet / Minim Alat Peraga)</option>
+                    </select>
+                </div>
+
+                <!-- PROFIL LULUSAN -->
+                <div class="border border-slate-800 p-4 rounded-xl bg-slate-900 space-y-3">
+                    <label class="block font-bold text-slate-300">🎯 Target Dimensi Profil Lulusan (Bisa Centang Lebih dari Satu):</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="dimensiProfilGroup">
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Keimanan" class="rounded border-slate-700 text-emerald-500" checked>
+                            <span class="text-slate-300">Keimanan</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Kewargaan" class="rounded border-slate-700 text-emerald-500">
+                            <span class="text-slate-300">Kewargaan</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Penalaran Kritis" class="rounded border-slate-700 text-emerald-500" checked>
+                            <span class="text-slate-300">Penalaran Kritis</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Kreativitas" class="rounded border-slate-700 text-emerald-500" checked>
+                            <span class="text-slate-300">Kreativitas</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Kolaborasi" class="rounded border-slate-700 text-emerald-500" checked>
+                            <span class="text-slate-300">Kolaborasi</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Kemandirian" class="rounded border-slate-700 text-emerald-500">
+                            <span class="text-slate-300">Kemandirian</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Kesehatan" class="rounded border-slate-700 text-emerald-500">
+                            <span class="text-slate-300">Kesehatan</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <input type="checkbox" value="Komunikasi" class="rounded border-slate-700 text-emerald-500">
+                            <span class="text-slate-300">Komunikasi</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <button id="processModulBtn" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/10 uppercase tracking-wider text-xs">
+                ✨ Susun Perangkat Ajar Bersama AI
+            </button>
+        </div>
+
+        <!-- RESULT PREVIEW WORKSPACE -->
+        <section id="previewSection" class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+                <h3 id="previewTitle" class="font-bold text-white text-xs">Pratinjau Hasil Rumusan Modul Ajar</h3>
+                <button id="exportSingleWordBtn" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all cursor-pointer">
+                    📥 Unduh File Word (.docx)
+                </button>
+            </div>
+            
+            <textarea id="modulEditableArea" 
+                class="w-full h-[550px] bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none leading-relaxed shadow-inner" 
+                style="white-space: pre-wrap; text-align: justify;"></textarea>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>Asisten Guru Indonesia © 2026 | Modul Perumus Modul Ajar Merdeka</p>
+    </footer>
+
+    <!-- LOGIKA MODULE -->
+    <script type="module" src="../js/modules/modul-ajar.js"></script>
+</body>
+</html>
