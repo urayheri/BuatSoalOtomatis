@@ -76,57 +76,38 @@
 
         <!-- PARAMETER & TEMPLATE GRID -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- DITAMBAHKAN: FORM KOP SURAT DAN METADATA UJIAN -->
+            <!-- PENGATURAN KOP SURAT (CUKUP UPLOAD 1 GAMBAR KOP) -->
 <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-lg">
     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2 flex items-center justify-between">
-        <span>🏫 Pengaturan Kop Surat & Info Ujian</span>
-        <span class="text-[10px] text-emerald-400 font-normal">*Dapat disesuaikan</span>
+        <span>🖼️ Pengaturan Kop Surat (Gambar Utuh)</span>
+        <span class="text-[10px] text-emerald-400 font-normal">*Upload gambar Kop Surat sekolah Anda</span>
     </h3>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Logo Kiri (Pemprov/Dinas)</label>
-            <input type="file" id="logoKiriInput" accept="image/*" class="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-lg p-1.5 text-xs">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs items-center">
+        <!-- Input File Gambar Kop -->
+        <div class="md:col-span-2 space-y-1.5">
+            <label class="block font-semibold text-slate-300">Upload Gambar Kop Surat (PNG/JPG/JPEG)</label>
+            <input type="file" id="kopGambarInput" accept="image/*" class="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-xl p-2.5 text-xs focus:border-emerald-500 focus:outline-none">
+            <span class="text-[10px] text-slate-500 block">Saran: Gunakan gambar yang memanjang horizontal dengan resolusi jelas.</span>
         </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Logo Kanan (Sekolah)</label>
-            <input type="file" id="logoKananInput" accept="image/*" class="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-lg p-1.5 text-xs">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Nama Instansi Atas</label>
-            <input type="text" id="kopInstansi1" value="PEMERINTAH PROVINSI KALIMANTAN BARAT" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Nama Dinas / Kedinasan</label>
-            <input type="text" id="kopInstansi2" value="DINAS PENDIDIKAN DAN KEBUDAYAAN" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Nama Sekolah</label>
-            <input type="text" id="kopSekolah" value="SMK NEGERI 1 SEMPARUK" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 font-bold text-emerald-400">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Alamat Sekolah</label>
-            <input type="text" id="kopAlamat" value="Jalan Pendidikan Nomor 19 Kecamatan Semparuk Kabupaten Sambas 79453" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">Email / Website</label>
-            <input type="text" id="kopEmail" value="smkn1_semparuk@yahoo.co.id" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
-        </div>
-        <div>
-            <label class="block font-semibold text-slate-300 mb-1">NSS / NPSN / NIS</label>
-            <input type="text" id="kopNomor" value="NSS: 401130113001  |  NPSN: 30107298  |  NIS: 1301120001" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+
+        <!-- Preview Gambar Kop Singkat -->
+        <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3 text-center min-h-[70px] flex items-center justify-center">
+            <div id="kopPreviewContainer" class="text-slate-500 text-[11px]">
+                <span>Belum ada Kop diunggah<br>(Menggunakan Kop Default)</span>
+            </div>
         </div>
     </div>
 
     <!-- Metadata Mata Pelajaran & Kelas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-2 border-t border-slate-800/80">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-3 border-t border-slate-800/80">
         <div>
             <label class="block font-semibold text-slate-300 mb-1">Judul Ujian</label>
-            <input type="text" id="metaJudul" value="SOAL ULANGAN SEMESTER GENAP TAHUN 2022/2023" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white font-bold">
+            <input type="text" id="metaJudul" value="SOAL ULANGAN SEMESTER GENAP" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white font-bold">
         </div>
         <div>
-            <label class="block font-semibold text-slate-300 mb-1">Program Diklat / Mapel</label>
-            <input type="text" id="metaMapel" value="Matematika" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
+            <label class="block font-semibold text-slate-300 mb-1">Mata Pelajaran / Program</label>
+            <input type="text" id="metaMapel" value="Pemrograman Web dan Perangkat Bergerak" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white">
         </div>
         <div>
             <label class="block font-semibold text-slate-300 mb-1">Kelas / Jurusan</label>
