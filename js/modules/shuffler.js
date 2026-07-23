@@ -4,11 +4,10 @@ let originalPGQuestions = [];
 let originalEssayQuestions = [];
 let kopGambarBase64 = "";
 
-// 1. DEFINISI FUNGSI RENDER PREVIEW DI ATAS AGAR SELALU TERSEDIA
+// 1. DEFINISI FUNGSI PREVIEW LANGSUNG DI FILE INI
 function renderPreviewSoal(pgList, essayList, container) {
     if (!container) return;
 
-    // Generasi tampilan pratinjau yang sama dengan dokumen Word
     const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER/PRATINJAU");
     
     container.innerHTML = `
@@ -17,7 +16,6 @@ function renderPreviewSoal(pgList, essayList, container) {
         </div>
     `;
 
-    // Render MathJax jika ada formula matematika
     if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
     }
@@ -36,7 +34,6 @@ export function initShuffler() {
 
     if (!excelInput) return;
 
-    // Handler Upload Gambar Kop Surat
     if (kopGambarInput) {
         kopGambarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -129,9 +126,16 @@ export function initShuffler() {
         reader.readAsArrayBuffer(file);
     });
 
+    // SAFE UPDATE PREVIEW (DILENGKAPI PELINDUNG AGAR TIDAK BISA CRASH)
     function updatePreview() {
         if (originalPGQuestions.length > 0 || originalEssayQuestions.length > 0) {
-            renderPreviewSoal(originalPGQuestions, originalEssayQuestions, soalContainer);
+            if (typeof renderPreviewSoal === 'function') {
+                renderPreviewSoal(originalPGQuestions, originalEssayQuestions, soalContainer);
+            } else if (window.renderPreviewSoal === 'function') {
+                window.renderPreviewSoal(originalPGQuestions, originalEssayQuestions, soalContainer);
+            } else {
+                console.warn("Fungsi renderPreviewSoal belum dimuat, lewati preview.");
+            }
         }
     }
 
@@ -188,7 +192,6 @@ export function initShuffler() {
     }
 }
 
-// LOGIKA LAYOUT OPSI ADAPTIF
 function renderOpsiAdaptif(opsiArray) {
     const labels = ["A", "B", "C", "D", "E"];
     const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
@@ -218,7 +221,6 @@ function renderOpsiAdaptif(opsiArray) {
     }
 }
 
-// GENERASI HTML DOKUMEN FULL TIMES NEW ROMAN 12PT & JUSTIFY
 function generateFullExamHTML(pgList, essayList, packetName) {
     const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP";
     const mapel = document.getElementById('metaMapel')?.value || "Pemrograman Web";
