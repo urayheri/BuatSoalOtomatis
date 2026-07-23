@@ -2,7 +2,7 @@ import { shuffleArray } from '../utils.js';
 
 let originalPGQuestions = [];
 let originalEssayQuestions = [];
-let kopGambarBase64 = ""; // Menampung Base64 dari Upload Kop Surat
+let kopGambarBase64 = "";
 
 export function initShuffler() {
     const excelInput = document.getElementById('excelInput');
@@ -18,43 +18,36 @@ export function initShuffler() {
     if (!excelInput) return;
 
     // Handler Upload Gambar Kop Surat
-    // Handler Upload Gambar Kop Surat
-if (kopGambarInput) {
-    kopGambarInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (evt) => { 
-                kopGambarBase64 = evt.target.result;
-                
-                // 1. Cari elemen kotak preview (dengan fallback selector yang aman)
-                const previewBox = document.getElementById('kopPreviewContainer') || 
-                                   document.querySelector('#kopGambarInput').parentElement.nextElementSibling;
-                
-                if (previewBox) {
-                    previewBox.innerHTML = `
-                        <div class="space-y-1">
-                            <img src="${kopGambarBase64}" class="max-h-12 max-w-full mx-auto rounded object-contain border border-emerald-500/30 shadow-sm" />
-                            <span class="text-[10px] text-emerald-400 font-semibold block">✓ Kop Terpasang</span>
-                        </div>
-                    `;
-                }
+    if (kopGambarInput) {
+        kopGambarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => { 
+                    kopGambarBase64 = evt.target.result;
+                    
+                    const previewBox = document.getElementById('kopPreviewContainer') || 
+                                       document.querySelector('#kopGambarInput').parentElement.nextElementSibling;
+                    
+                    if (previewBox) {
+                        previewBox.innerHTML = `
+                            <div class="space-y-1">
+                                <img src="${kopGambarBase64}" class="max-h-12 max-w-full mx-auto rounded object-contain border border-emerald-500/30 shadow-sm" />
+                                <span class="text-[10px] text-emerald-400 font-semibold block">✓ Kop Terpasang</span>
+                            </div>
+                        `;
+                    }
 
-                // 2. Jika soal Excel sudah ada di layar, perbarui pratinjau lembar soalnya
-                if (typeof updatePreview === 'function') {
                     updatePreview(); 
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
-    // Handler Download Template Excel
     if (downloadEBtn) downloadEBtn.addEventListener('click', () => downloadExcelTemplate(5));
     if (downloadDBtn) downloadDBtn.addEventListener('click', () => downloadExcelTemplate(4));
 
-    // Handle Upload Excel
     excelInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -87,19 +80,17 @@ if (kopGambarInput) {
                         originalPGQuestions.push({
                             soal: String(row[0]),
                             opsi: [
-                                { teks: String(row[1] || "-"), labelOriginal: "A" },
-                                { teks: String(row[2] || "-"), labelOriginal: "B" },
-                                { teks: String(row[3] || "-"), labelOriginal: "C" },
-                                { teks: String(row[4] || "-"), labelOriginal: "D" },
-                                ...(row[5] ? [{ teks: String(row[5]), labelOriginal: "E" }] : [])
+                                { teks: String(row[1] || "-") },
+                                { teks: String(row[2] || "-") },
+                                { teks: String(row[3] || "-") },
+                                { teks: String(row[4] || "-") },
+                                ...(row[5] ? [{ teks: String(row[5]) }] : [])
                             ],
-                            kunciOriginal: (row[6] || "A").toString().trim().toUpperCase(),
                             gambar: row[7] || ""
                         });
                     } else {
                         originalEssayQuestions.push({
                             soal: String(row[0]),
-                            kunci: String(row[6] || "-"),
                             gambar: row[7] || ""
                         });
                     }
@@ -123,7 +114,6 @@ if (kopGambarInput) {
         }
     }
 
-    // Handle Proses Acak & Buat File Word (.docx)
     processAcakBtn.addEventListener('click', async () => {
         if (originalPGQuestions.length === 0 && originalEssayQuestions.length === 0) {
             alert("Belum ada data soal yang dimuat!");
@@ -175,27 +165,13 @@ if (kopGambarInput) {
     });
 }
 
-function getOpsiLayoutHtml(opsiArray) {
-    const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
-    const labels = ["a", "b", "c", "d", "e"];
-
-    if (maxLen <= 15) {
-        let cols = opsiArray.map((opt, idx) => `<td style="width:20%; vertical-align:top;">${labels[idx]}. ${opt.teks}</td>`).join('');
-        return `<table style="width:100%; border-collapse:collapse;"><tr>${cols}</tr></table>`;
-    } else if (maxLen <= 35) {
-        let r1 = '', r2 = '';
-        opsiArray.forEach((opt, idx) => {
-            const cell = `<td style="width:33.33%; vertical-align:top;">${labels[idx]}. ${opt.teks}</td>`;
-            if (idx % 2 === 0) r1 += cell; else r2 += cell;
-        });
-        return `
-            <table style="width:100%; border-collapse:collapse; margin-bottom:2px;"><tr>${r1}</tr></table>
-            <table style="width:100%; border-collapse:collapse;"><tr>${r2}</tr></table>`;
-    } else {
-        return opsiArray.map((opt, idx) => 
-            `<div style="margin-bottom:2px;">${labels[idx]}. ${opt.teks}</div>`
-        ).join('');
-    }
+// FORMAT PILIHAN GANDA TANPA TABEL (PARAGRAF BIASA DENGAN INDENTASI MASUK)
+function renderOpsiTanpaTabel(opsiArray) {
+    const labels = ["A", "B", "C", "D", "E"];
+    
+    return opsiArray.map((opt, idx) => {
+        return `<p class="opsi-item">${labels[idx]}. ${opt.teks}</p>`;
+    }).join('');
 }
 
 function renderPreviewSoal(pgList, essayList, containerElement) {
@@ -212,22 +188,25 @@ function renderPreviewSoal(pgList, essayList, containerElement) {
     }
 }
 
-// Generasi HTML Dokumen Menggunakan GAMBAR KOP UTUH
+// GENERASI HTML DOKUMEN (TIMES NEW ROMAN 12PT, RATA KIRI-KANAN / JUSTIFY, KOP PROPORSIONAL)
 function generateFullExamHTML(pgList, essayList, packetName) {
     const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP";
     const mapel = document.getElementById('metaMapel')?.value || "Pemrograman Web";
     const kelas = document.getElementById('metaKelas')?.value || "XI RPL 1, 2";
     const waktu = document.getElementById('metaWaktu')?.value || "-";
 
-    // Elemen Kop Surat (Memuat Gambar Utama atau Placeholder jika belum diunggah)
+    // KOP SURAT PRESISI PROPORSIONAL
     let kopSection = '';
     if (kopGambarBase64) {
-        kopSection = `<div style="text-align:center; margin-bottom:10px;"><img src="${kopGambarBase64}" style="width:100%; max-width:680px; height:auto;"/></div>`;
+        kopSection = `
+        <div style="text-align: center; margin-bottom: 12pt;">
+            <img src="${kopGambarBase64}" style="width: 100%; max-width: 650px; height: auto; display: block; margin: 0 auto;" />
+        </div>`;
     } else {
         kopSection = `
-        <div style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 10px; text-align: center;">
-            <div style="font-size:12pt; font-weight:bold;">[ KOP SURAT SEKOLAH ]</div>
-            <div style="font-size:9pt; color:#666;">(Unggah gambar Kop Surat pada form di atas)</div>
+        <div style="border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 12pt; text-align: center;">
+            <div style="font-size: 14pt; font-weight: bold;">[ KOP SURAT SEKOLAH ]</div>
+            <div style="font-size: 10pt; color: #555;">(Unggah gambar Kop Surat di menu atas)</div>
         </div>`;
     }
 
@@ -237,30 +216,65 @@ function generateFullExamHTML(pgList, essayList, packetName) {
     <head>
         <meta charset="utf-8">
         <style>
-            body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.2; }
-            table { border-collapse: collapse; width: 100%; }
-            .border-single { border-bottom: 2px solid #000; margin-bottom: 12px; }
-            .text-center { text-align: center; }
-            .font-bold { font-weight: bold; }
+            @page {
+                size: A4;
+                margin: 2cm;
+            }
+            body { 
+                font-family: 'Times New Roman', Times, serif !important; 
+                font-size: 12pt !important; 
+                color: #000; 
+                line-height: 1.25; 
+                text-align: justify; /* RATA KIRI KANAN */
+            }
+            p {
+                margin: 0 0 4pt 0;
+                text-align: justify;
+            }
+            .soal-text {
+                margin-left: 24pt;
+                text-indent: -24pt;
+                margin-bottom: 4pt;
+                text-align: justify;
+            }
+            .opsi-item {
+                margin-left: 24pt;
+                margin-bottom: 2pt;
+                text-align: justify;
+            }
+            .header-info {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 8pt;
+                font-size: 12pt;
+            }
+            .header-info td {
+                padding: 1pt 0;
+                vertical-align: top;
+            }
+            .border-line {
+                border-bottom: 1.5pt solid #000;
+                margin-bottom: 12pt;
+            }
         </style>
     </head>
     <body>
-        <!-- KOP SURAT BERBENTUK GAMBAR UTUH -->
+        <!-- KOP SURAT -->
         ${kopSection}
 
         <!-- JUDUL & METADATA -->
-        <div class="text-center font-bold" style="font-size:12pt; margin-bottom:12px; text-decoration:underline;">
+        <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 10pt; text-transform: uppercase; text-decoration: underline;">
             ${judul} (PAKET ${packetName})
         </div>
 
-        <table style="width:100%; font-size:10.5pt; margin-bottom:8px;">
+        <table class="header-info">
             <tr>
-                <td style="width:18%;">Program Diklat</td>
-                <td style="width:2%;">:</td>
-                <td style="width:40%; font-weight:bold;">${mapel}</td>
-                <td style="width:18%;">Hari / Tanggal</td>
-                <td style="width:2%;">:</td>
-                <td style="width:20%;">${waktu}</td>
+                <td style="width: 18%;">Program Diklat</td>
+                <td style="width: 2%;">:</td>
+                <td style="width: 40%; font-weight: bold;">${mapel}</td>
+                <td style="width: 18%;">Hari / Tanggal</td>
+                <td style="width: 2%;">:</td>
+                <td style="width: 20%;">${waktu}</td>
             </tr>
             <tr>
                 <td>Kelas / Jurusan</td>
@@ -272,9 +286,9 @@ function generateFullExamHTML(pgList, essayList, packetName) {
             </tr>
         </table>
 
-        <div class="border-single"></div>
+        <div class="border-line"></div>
 
-        <div style="font-weight:bold; margin-bottom:8px;">Pilihlah jawaban berikut dengan benar!</div>
+        <p style="font-weight: bold; margin-bottom: 10pt;">Pilihlah jawaban berikut dengan benar!</p>
 
         <!-- DAFTAR SOAL PG -->
         <div>
@@ -282,36 +296,30 @@ function generateFullExamHTML(pgList, essayList, packetName) {
 
     pgList.forEach((q, idx) => {
         const shuffledOpsi = shuffleArray(q.opsi);
-        const opsiLayout = getOpsiLayoutHtml(shuffledOpsi);
-        const gambarHtml = q.gambar ? `<div style="margin:4px 0 4px 24px;"><img src="${q.gambar}" style="max-width:200px; height:auto;"/></div>` : '';
+        const opsiContent = renderOpsiTanpaTabel(shuffledOpsi);
+        const gambarHtml = q.gambar ? `<div style="margin: 4pt 0 4pt 24pt;"><img src="${q.gambar}" style="max-width: 250px; height: auto;"/></div>` : '';
 
         html += `
-        <div style="margin-bottom:10px; page-break-inside:avoid;">
-            <table style="width:100%;">
-                <tr>
-                    <td style="width:24px; vertical-align:top; font-weight:bold;">${idx + 1}.</td>
-                    <td style="vertical-align:top;">${q.soal}</td>
-                </tr>
-            </table>
+        <div style="margin-bottom: 8pt; page-break-inside: avoid;">
+            <div class="soal-text">
+                <b>${idx + 1}.</b> ${q.soal}
+            </div>
             ${gambarHtml}
-            <div style="margin-left:24px; margin-top:2px;">
-                ${opsiLayout}
+            <div>
+                ${opsiContent}
             </div>
         </div>`;
     });
 
     if (essayList.length > 0) {
-        html += `<div style="font-weight:bold; margin:16px 0 8px 0;">Jawablah pertanyaan berikut dengan singkat dan jelas!</div>`;
+        html += `<p style="font-weight: bold; margin: 14pt 0 8pt 0;">Jawablah pertanyaan berikut dengan singkat dan jelas!</p>`;
         essayList.forEach((q, idx) => {
-            const gambarHtml = q.gambar ? `<div style="margin:4px 0 4px 24px;"><img src="${q.gambar}" style="max-width:200px; height:auto;"/></div>` : '';
+            const gambarHtml = q.gambar ? `<div style="margin: 4pt 0 4pt 24pt;"><img src="${q.gambar}" style="max-width: 250px; height: auto;"/></div>` : '';
             html += `
-            <div style="margin-bottom:10px; page-break-inside:avoid;">
-                <table style="width:100%;">
-                    <tr>
-                        <td style="width:24px; vertical-align:top; font-weight:bold;">${idx + 1}.</td>
-                        <td style="vertical-align:top;">${q.soal}</td>
-                    </tr>
-                </table>
+            <div style="margin-bottom: 8pt; page-break-inside: avoid;">
+                <div class="soal-text">
+                    <b>${idx + 1}.</b> ${q.soal}
+                </div>
                 ${gambarHtml}
             </div>`;
         });
