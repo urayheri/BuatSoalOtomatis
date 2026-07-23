@@ -18,26 +18,37 @@ export function initShuffler() {
     if (!excelInput) return;
 
     // Handler Upload Gambar Kop Surat
-    if (kopGambarInput) {
-        kopGambarInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => { 
-                    kopGambarBase64 = evt.target.result;
-                    
-                    // Update Pratinjau Kecil di Form
-                    const previewBox = document.getElementById('kopPreviewContainer');
-                    if(previewBox) {
-                        previewBox.innerHTML = `<img src="${kopGambarBase64}" class="max-h-16 mx-auto rounded object-contain" />`;
-                    }
-                    
+    // Handler Upload Gambar Kop Surat
+if (kopGambarInput) {
+    kopGambarInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => { 
+                kopGambarBase64 = evt.target.result;
+                
+                // 1. Cari elemen kotak preview (dengan fallback selector yang aman)
+                const previewBox = document.getElementById('kopPreviewContainer') || 
+                                   document.querySelector('#kopGambarInput').parentElement.nextElementSibling;
+                
+                if (previewBox) {
+                    previewBox.innerHTML = `
+                        <div class="space-y-1">
+                            <img src="${kopGambarBase64}" class="max-h-12 max-w-full mx-auto rounded object-contain border border-emerald-500/30 shadow-sm" />
+                            <span class="text-[10px] text-emerald-400 font-semibold block">✓ Kop Terpasang</span>
+                        </div>
+                    `;
+                }
+
+                // 2. Jika soal Excel sudah ada di layar, perbarui pratinjau lembar soalnya
+                if (typeof updatePreview === 'function') {
                     updatePreview(); 
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
     // Handler Download Template Excel
     if (downloadEBtn) downloadEBtn.addEventListener('click', () => downloadExcelTemplate(5));
