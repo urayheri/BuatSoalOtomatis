@@ -27,7 +27,7 @@ export function initShuffler() {
                     kopGambarBase64 = evt.target.result;
                     
                     const previewBox = document.getElementById('kopPreviewContainer') || 
-                                       document.querySelector('#kopGambarInput').parentElement.nextElementSibling;
+                                       document.querySelector('#kopGambarInput')?.parentElement?.nextElementSibling;
                     
                     if (previewBox) {
                         previewBox.innerHTML = `
@@ -97,9 +97,11 @@ export function initShuffler() {
                 }
 
                 previewSection.classList.remove('hidden');
-                badgeTotalSoal.textContent = `${originalPGQuestions.length} PG / ${originalEssayQuestions.length} Essay`;
+                if (badgeTotalSoal) {
+                    badgeTotalSoal.textContent = `${originalPGQuestions.length} PG / ${originalEssayQuestions.length} Essay`;
+                }
                 updatePreview();
-                processAcakBtn.disabled = false;
+                if (processAcakBtn) processAcakBtn.disabled = false;
 
             } catch (err) {
                 alert("Gagal membaca berkas Excel: " + err.message);
@@ -114,55 +116,57 @@ export function initShuffler() {
         }
     }
 
-    processAcakBtn.addEventListener('click', async () => {
-        if (originalPGQuestions.length === 0 && originalEssayQuestions.length === 0) {
-            alert("Belum ada data soal yang dimuat!");
-            return;
-        }
-
-        const packetCount = parseInt(document.getElementById('packetCount')?.value) || 2;
-        const zip = new JSZip();
-
-        processAcakBtn.disabled = true;
-        processAcakBtn.textContent = "⏳ Memproses Dokumen Word...";
-
-        try {
-            for (let p = 0; p < packetCount; p++) {
-                const packetLetter = String.fromCharCode(65 + p);
-                const limitPG = parseInt(document.getElementById('limitCountPG')?.value) || originalPGQuestions.length;
-                const limitEssay = parseInt(document.getElementById('limitCountEssay')?.value) || originalEssayQuestions.length;
-
-                const shuffledPG = shuffleArray(originalPGQuestions).slice(0, limitPG);
-                const shuffledEssay = shuffleArray(originalEssayQuestions).slice(0, limitEssay);
-
-                const htmlString = generateFullExamHTML(shuffledPG, shuffledEssay, packetLetter);
-
-                let convertedDocx;
-                if (window.htmlDocx) {
-                    convertedDocx = window.htmlDocx.asBlob(htmlString, {
-                        orientation: 'portrait',
-                        margins: { top: 720, right: 720, bottom: 720, left: 720 }
-                    });
-                } else {
-                    convertedDocx = new Blob([htmlString], { type: 'application/msword' });
-                }
-
-                zip.file(`Soal_Ujian_Paket_${packetLetter}.docx`, convertedDocx);
+    if (processAcakBtn) {
+        processAcakBtn.addEventListener('click', async () => {
+            if (originalPGQuestions.length === 0 && originalEssayQuestions.length === 0) {
+                alert("Belum ada data soal yang dimuat!");
+                return;
             }
 
-            const content = await zip.generateAsync({ type: "blob" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(content);
-            link.download = `Paket_Soal_Ujian_Word.zip`;
-            link.click();
+            const packetCount = parseInt(document.getElementById('packetCount')?.value) || 2;
+            const zip = new JSZip();
 
-        } catch (err) {
-            alert("Terjadi kesalahan pembuatan dokumen Word: " + err.message);
-        } finally {
-            processAcakBtn.disabled = false;
-            processAcakBtn.textContent = "📝 Acak & Ekspor ke ZIP";
-        }
-    });
+            processAcakBtn.disabled = true;
+            processAcakBtn.textContent = "⏳ Memproses Dokumen Word...";
+
+            try {
+                for (let p = 0; p < packetCount; p++) {
+                    const packetLetter = String.fromCharCode(65 + p);
+                    const limitPG = parseInt(document.getElementById('limitCountPG')?.value) || originalPGQuestions.length;
+                    const limitEssay = parseInt(document.getElementById('limitCountEssay')?.value) || originalEssayQuestions.length;
+
+                    const shuffledPG = shuffleArray(originalPGQuestions).slice(0, limitPG);
+                    const shuffledEssay = shuffleArray(originalEssayQuestions).slice(0, limitEssay);
+
+                    const htmlString = generateFullExamHTML(shuffledPG, shuffledEssay, packetLetter);
+
+                    let convertedDocx;
+                    if (window.htmlDocx) {
+                        convertedDocx = window.htmlDocx.asBlob(htmlString, {
+                            orientation: 'portrait',
+                            margins: { top: 720, right: 720, bottom: 720, left: 720 }
+                        });
+                    } else {
+                        convertedDocx = new Blob([htmlString], { type: 'application/msword' });
+                    }
+
+                    zip.file(`Soal_Ujian_Paket_${packetLetter}.docx`, convertedDocx);
+                }
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = `Paket_Soal_Ujian_Word.zip`;
+                link.click();
+
+            } catch (err) {
+                alert("Terjadi kesalahan pembuatan dokumen Word: " + err.message);
+            } finally {
+                processAcakBtn.disabled = false;
+                processAcakBtn.textContent = "📝 Acak & Ekspor ke ZIP";
+            }
+        });
+    }
 }
 
 // LOGIKA LAYOUT OPSI ADAPTIF (1 BARIS, 2 BARIS, ATAU KE BAWAH)
@@ -197,6 +201,25 @@ function renderOpsiAdaptif(opsiArray) {
                 <b>${labels[idx]}.</b> ${opt.teks}
             </div>
         `).join('');
+    }
+}
+
+// FUNGSI RENDER PRATINJAU DI HALAMAN WEB
+function renderPreviewSoal(pgList, essayList, container) {
+    if (!container) return;
+
+    // Memanfaatkan fungsi generator HTML dokumen agar pratinjau di web 100% presisi dengan hasil Word
+    const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER/PRATINJAU");
+    
+    container.innerHTML = `
+        <div class="bg-white text-slate-900 p-6 rounded-xl shadow-inner border border-slate-200 overflow-x-auto" style="min-height: 400px;">
+            ${htmlPreview}
+        </div>
+    `;
+
+    // Render ulang MathJax jika terdapat formula matematika
+    if (window.MathJax) {
+        window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
     }
 }
 
@@ -341,6 +364,7 @@ function generateFullExamHTML(pgList, essayList, packetName) {
     html += `</div></body></html>`;
     return html;
 }
+
 function downloadExcelTemplate(optionCount) {
     const headers = ["Pertanyaan / Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D"];
     if (optionCount === 5) headers.push("Opsi E");
