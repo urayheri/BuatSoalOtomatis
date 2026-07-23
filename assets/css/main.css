@@ -84,3 +84,79 @@ body {
 .animate-wave-fast {
     animation: moveWaveFast 7s ease-in-out infinite;
 }
+/* STYLING RUMUS MATEMATIKA & SIMBOL */
+.math-expr, .katex {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 1.05em;
+}
+
+/* STYLING DAFTAR SOAL & OPSI RESPONSIF */
+.soal-item {
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+}
+
+.soal-text {
+    display: table;
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+.soal-nomor {
+    display: table-cell;
+    width: 28px;
+    vertical-align: top;
+    font-weight: bold;
+}
+
+.soal-isi {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.opsi-wrapper {
+    margin-left: 28px;
+    width: calc(100% - 28px);
+}
+
+/* Opsi 1 Baris (Jawaban Pendek <= 15 Karakter) */
+.opsi-row-1 {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+.opsi-row-1 .opsi-col {
+    display: table-cell;
+    width: 20%;
+    vertical-align: top;
+}
+
+/* Opsi 2 Baris (Jawaban Sedang 16-35 Karakter) */
+.opsi-row-2 {
+    display: table;
+    width: 100%;
+    margin-bottom: 3px;
+    table-layout: fixed;
+}
+.opsi-row-2 .opsi-col-3 {
+    display: table-cell;
+    width: 33.33%;
+    vertical-align: top;
+}
+.opsi-row-2 .opsi-col-2 {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+}
+
+/* Opsi Vertikal (Jawaban Panjang > 35 Karakter) */
+.opsi-vertical {
+    display: table;
+    width: 100%;
+    margin-bottom: 3px;
+}
+.opsi-vertical .opsi-col-full {
+    display: table-cell;
+    width: 100%;
+    vertical-align: top;
+}
