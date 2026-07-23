@@ -2,6 +2,8 @@ import { shuffleArray } from '../utils.js';
 
 let originalPGQuestions = [];
 let originalEssayQuestions = [];
+let logoKiriBase64 = "";
+let logoKananBase64 = "";
 
 export function initShuffler() {
     const excelInput = document.getElementById('excelInput');
@@ -13,17 +15,39 @@ export function initShuffler() {
     const downloadEBtn = document.getElementById('downloadTemplateEBtn');
     const downloadDBtn = document.getElementById('downloadTemplateDBtn');
 
+    const logoKiriInput = document.getElementById('logoKiriInput');
+    const logoKananInput = document.getElementById('logoKananInput');
+
     if (!excelInput) return;
 
-    // --- A. Download Template Handler ---
-    if (downloadEBtn) {
-        downloadEBtn.addEventListener('click', () => downloadExcelTemplate(5));
-    }
-    if (downloadDBtn) {
-        downloadDBtn.addEventListener('click', () => downloadExcelTemplate(4));
+    // Handler Upload Logo
+    if (logoKiriInput) {
+        logoKiriInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => { logoKiriBase64 = evt.target.result; updatePreview(); };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 
-    // --- B. Handle Upload File Excel ---
+    if (logoKananInput) {
+        logoKananInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => { logoKananBase64 = evt.target.result; updatePreview(); };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Handler Download Template Excel
+    if (downloadEBtn) downloadEBtn.addEventListener('click', () => downloadExcelTemplate(5));
+    if (downloadDBtn) downloadDBtn.addEventListener('click', () => downloadExcelTemplate(4));
+
+    // Handle Upload Excel
     excelInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -32,13 +56,11 @@ export function initShuffler() {
         fileStatus.className = "text-xs text-emerald-400 font-semibold block mt-1";
 
         const reader = new FileReader();
-
         reader.onload = function (event) {
             try {
                 const data = new Uint8Array(event.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const ws = workbook.Sheets[firstSheetName];
+                const ws = workbook.Sheets[workbook.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
                 if (rows.length < 2) {
@@ -49,7 +71,6 @@ export function initShuffler() {
                 originalPGQuestions = [];
                 originalEssayQuestions = [];
 
-                // Parsing baris Excel (mulai dari baris ke-2 / index 1)
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
                     if (!row || !row[0]) continue;
@@ -57,8 +78,7 @@ export function initShuffler() {
                     const hasOptions = row[1] || row[2];
                     if (hasOptions) {
                         originalPGQuestions.push({
-                            soal: row[0],
-                            gambar: row[7] || "", // Kolom H (Index 7) untuk URL/Base64 Gambar
+                            soal: String(row[0]),
                             opsi: [
                                 { teks: String(row[1] || "-"), labelOriginal: "A" },
                                 { teks: String(row[2] || "-"), labelOriginal: "B" },
@@ -66,34 +86,37 @@ export function initShuffler() {
                                 { teks: String(row[4] || "-"), labelOriginal: "D" },
                                 ...(row[5] ? [{ teks: String(row[5]), labelOriginal: "E" }] : [])
                             ],
-                            kunciOriginal: (row[6] || "A").toString().trim().toUpperCase()
+                            kunciOriginal: (row[6] || "A").toString().trim().toUpperCase(),
+                            gambar: row[7] || ""
                         });
                     } else {
                         originalEssayQuestions.push({
-                            soal: row[0],
-                            gambar: row[7] || "",
-                            kunci: row[6] || "-"
+                            soal: String(row[0]),
+                            kunci: String(row[6] || "-"),
+                            gambar: row[7] || ""
                         });
                     }
                 }
 
-                // Render Preview Paket Utama
                 previewSection.classList.remove('hidden');
                 badgeTotalSoal.textContent = `${originalPGQuestions.length} PG / ${originalEssayQuestions.length} Essay`;
-                
-                renderPreviewSoal(originalPGQuestions, originalEssayQuestions, soalContainer);
-
+                updatePreview();
                 processAcakBtn.disabled = false;
 
             } catch (err) {
                 alert("Gagal membaca berkas Excel: " + err.message);
             }
         };
-
         reader.readAsArrayBuffer(file);
     });
 
-    // --- C. Handle Proses Acak & Ekspor Dokumen Rapi (Word / ZIP) ---
+    function updatePreview() {
+        if (originalPGQuestions.length > 0 || originalEssayQuestions.length > 0) {
+            renderPreviewSoal(originalPGQuestions, originalEssayQuestions, soalContainer);
+        }
+    }
+
+    // Handle Proses Acak & Buat File Word (.docx) Valid
     processAcakBtn.addEventListener('click', async () => {
         if (originalPGQuestions.length === 0 && originalEssayQuestions.length === 0) {
             alert("Belum ada data soal yang dimuat!");
@@ -104,170 +127,211 @@ export function initShuffler() {
         const zip = new JSZip();
 
         processAcakBtn.disabled = true;
-        processAcakBtn.textContent = "⏳ Sedang Mengacak & Membuat Dokumen Word...";
+        processAcakBtn.textContent = "⏳ Memproses Dokumen Word Native...";
 
         try {
             for (let p = 0; p < packetCount; p++) {
                 const packetLetter = String.fromCharCode(65 + p);
-                const shuffledPG = shuffleArray(originalPGQuestions);
-                const shuffledEssay = shuffleArray(originalEssayQuestions);
+                const limitPG = parseInt(document.getElementById('limitCountPG')?.value) || originalPGQuestions.length;
+                const limitEssay = parseInt(document.getElementById('limitCountEssay')?.value) || originalEssayQuestions.length;
 
-                // Buat Dokumen HTML Lengkap untuk Paket
-                const docHTML = generateFullExamHTML(shuffledPG, shuffledEssay, packetLetter);
+                const shuffledPG = shuffleArray(originalPGQuestions).slice(0, limitPG);
+                const shuffledEssay = shuffleArray(originalEssayQuestions).slice(0, limitEssay);
 
-                // Konversi ke format .docx (Microsoft Word)
-                const wordHeader = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
-                                   "xmlns:w='urn:schemas-microsoft-com:office:word' " +
-                                   "xmlns='http://www.w3.org/TR/REC-html40'>" +
-                                   "<head><meta charset='utf-8'><title>Soal Ujian</title></head><body>";
-                const wordFooter = "</body></html>";
-                const fullWordHTML = wordHeader + docHTML + wordFooter;
+                const htmlString = generateFullExamHTML(shuffledPG, shuffledEssay, packetLetter);
 
-                // Masukkan ke ZIP
-                zip.file(`Soal_Ujian_Paket_${packetLetter}.docx`, fullWordHTML);
+                // Menggunakan htmlDocx untuk mengkonversi HTML ke .docx murni yang valid
+                let convertedDocx;
+                if (window.htmlDocx) {
+                    convertedDocx = window.htmlDocx.asBlob(htmlString, {
+                        orientation: 'portrait',
+                        margins: { top: 720, right: 720, bottom: 720, left: 720 }
+                    });
+                } else {
+                    // Fallback jika lib belum termuat
+                    convertedDocx = new Blob([htmlString], { type: 'application/msword' });
+                }
+
+                zip.file(`Soal_Ujian_Paket_${packetLetter}.docx`, convertedDocx);
             }
 
             const content = await zip.generateAsync({ type: "blob" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(content);
-            link.download = `Paket_Soal_Acak_Ujian_Rapi.zip`;
+            link.download = `Paket_Soal_Ujian_Word.zip`;
             link.click();
 
         } catch (err) {
-            alert("Terjadi kesalahan pembuatan dokumen: " + err.message);
+            alert("Terjadi kesalahan pembuatan dokumen Word: " + err.message);
         } finally {
             processAcakBtn.disabled = false;
-            processAcakBtn.textContent = "📝 Acak & Ekspor ke Word (ZIP)";
+            processAcakBtn.textContent = "📝 Acak & Ekspor ke ZIP";
         }
     });
 }
 
-// --- D. LOGIKA PENATAAN TATA LETAK & MATEMATIKA ---
-
-// Helper menentukan layout opsi (1 Baris, 2 Baris, atau Vertikal)
+// Layout Pilihan Ganda (Responsif & Rapi)
 function getOpsiLayoutHtml(opsiArray) {
     const maxLen = Math.max(...opsiArray.map(o => (o.teks || '').length));
     const labels = ["a", "b", "c", "d", "e"];
 
     if (maxLen <= 15) {
-        // Layout 1 Baris (Pendek)
-        let cols = opsiArray.map((opt, idx) => `<div style="display:table-cell; width:20%; vertical-align:top;">${labels[idx]}. ${opt.teks}</div>`).join('');
-        return `<div style="display:table; width:100%; table-layout:fixed;">${cols}</div>`;
+        let cols = opsiArray.map((opt, idx) => `<td style="width:20%; vertical-align:top;">${labels[idx]}. ${opt.teks}</td>`).join('');
+        return `<table style="width:100%; border-collapse:collapse;"><tr>${cols}</tr></table>`;
     } else if (maxLen <= 35) {
-        // Layout 2 Baris (Sedang: Baris 1 -> a,c,e | Baris 2 -> b,d)
-        let row1 = '', row2 = '';
+        let r1 = '', r2 = '';
         opsiArray.forEach((opt, idx) => {
-            const cell = `<div style="display:table-cell; ${idx < 3 ? 'width:33.33%' : 'width:50%'}; vertical-align:top;">${labels[idx]}. ${opt.teks}</div>`;
-            if (idx % 2 === 0) row1 += cell;
-            else row2 += cell;
+            const cell = `<td style="width:33.33%; vertical-align:top;">${labels[idx]}. ${opt.teks}</td>`;
+            if (idx % 2 === 0) r1 += cell; else r2 += cell;
         });
         return `
-            <div style="display:table; width:100%; margin-bottom:2px; table-layout:fixed;">${row1}</div>
-            <div style="display:table; width:100%; table-layout:fixed;">${row2}</div>
-        `;
+            <table style="width:100%; border-collapse:collapse; margin-bottom:2px;"><tr>${r1}</tr></table>
+            <table style="width:100%; border-collapse:collapse;"><tr>${r2}</tr></table>`;
     } else {
-        // Layout Vertikal (Panjang)
         return opsiArray.map((opt, idx) => 
-            `<div style="display:table; width:100%; margin-bottom:2px;">
-                <div style="display:table-cell; width:100%; vertical-align:top;">${labels[idx]}. ${opt.teks}</div>
-             </div>`
+            `<div style="margin-bottom:2px;">${labels[idx]}. ${opt.teks}</div>`
         ).join('');
     }
 }
 
-// Render Preview Soal Ke Layar HTML dengan KaTeX Matematika
+// Render Preview Ke Layar
 function renderPreviewSoal(pgList, essayList, containerElement) {
-    const fullHTML = generateFullExamHTML(pgList, essayList, "A (Preview)");
-    containerElement.innerHTML = fullHTML;
+    containerElement.innerHTML = generateFullExamHTML(pgList, essayList, "A (Pratinjau)");
 
-    // Render Matematika KaTeX jika pustaka tersedia
     if (window.renderMathInElement) {
         renderMathInElement(containerElement, {
             delimiters: [
                 {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\(', right: '\\)', display: false},
-                {left: '\\[', right: '\\]', display: true}
+                {left: '$', right: '$', display: false}
             ],
             throwOnError: false
         });
     }
 }
 
-// Generasi HTML Soal Lengkap + Kop Surat Rapi
+// Generasi HTML Dokumen Presisi Sesuai Gambar Kop Surat
 function generateFullExamHTML(pgList, essayList, packetName) {
+    const instansi1 = document.getElementById('kopInstansi1')?.value || "PEMERINTAH PROVINSI KALIMANTAN BARAT";
+    const instansi2 = document.getElementById('kopInstansi2')?.value || "DINAS PENDIDIKAN DAN KEBUDAYAAN";
+    const sekolah = document.getElementById('kopSekolah')?.value || "SMK NEGERI 1 SEMPARUK";
+    const alamat = document.getElementById('kopAlamat')?.value || "Jalan Pendidikan Nomor 19 Kecamatan Semparuk Kabupaten Sambas 79453";
+    const email = document.getElementById('kopEmail')?.value || "smkn1_semparuk@yahoo.co.id";
+    const nomorKop = document.getElementById('kopNomor')?.value || "NSS: 401130113001  NPSN: 30107298  NIS: 1301120001";
+
+    const judul = document.getElementById('metaJudul')?.value || "SOAL ULANGAN SEMESTER GENAP TAHUN 2022/2023";
+    const mapel = document.getElementById('metaMapel')?.value || "Pemrograman Web";
+    const kelas = document.getElementById('metaKelas')?.value || "XI RPL 1, 2";
+    const waktu = document.getElementById('metaWaktu')?.value || "-";
+
+    const imgKiri = logoKiriBase64 ? `<img src="${logoKiriBase64}" style="width:70px; height:auto;"/>` : `<div style="font-weight:bold; font-size:9pt;">[LOGO KIRI]</div>`;
+    const imgKanan = logoKananBase64 ? `<img src="${logoKananBase64}" style="width:70px; height:auto;"/>` : `<div style="font-weight:bold; font-size:9pt;">[LOGO KANAN]</div>`;
+
     let html = `
-    <div style="font-family:'Times New Roman', Times, serif; font-size:11pt; line-height:1.25; color:#000;">
-        
-        <!-- KOP SURAT -->
-        <div style="display:table; width:100%; border-bottom:3px double #000; padding-bottom:5px; margin-bottom:12px;">
-            <div style="display:table-cell; width:15%; vertical-align:middle; text-align:center;">
-                <!-- Logo Kiri Placeholder -->
-                <div style="font-weight:bold; font-size:10pt;">[LOGO]</div>
-            </div>
-            <div style="display:table-cell; width:70%; vertical-align:middle; text-align:center;">
-                <div style="font-size:11pt; font-weight:bold; text-transform:uppercase;">PEMERINTAH PROVINSI KALIMANTAN BARAT</div>
-                <div style="font-size:12pt; font-weight:bold; text-transform:uppercase;">DINAS PENDIDIKAN DAN KEBUDAYAAN</div>
-                <div style="font-size:14pt; font-weight:bold; text-transform:uppercase; margin:2px 0;">SMK NEGERI 1 SEMPARUK</div>
-                <div style="font-size:8.5pt;">Jalan Pendidikan Nomor 19 Kecamatan Semparuk Kabupaten Sambas 79453</div>
-                <div style="font-size:8.5pt; font-weight:bold;"><u>smkn1_semparuk@yahoo.co.id</u></div>
-            </div>
-            <div style="display:table-cell; width:15%; vertical-align:middle; text-align:center;">
-                <div style="font-weight:bold; font-size:10pt;">[LOGO]</div>
-            </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.2; }
+            table { border-collapse: collapse; width: 100%; }
+            .border-double { border-bottom: 4px double #000; margin-bottom: 8px; padding-bottom: 4px; }
+            .border-single { border-bottom: 2px solid #000; margin-bottom: 12px; }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <!-- KOP SURAT PRESISI -->
+        <div class="border-double">
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:15%; text-align:center; vertical-align:middle;">${imgKiri}</td>
+                    <td style="width:70%; text-align:center; vertical-align:middle;">
+                        <div style="font-size:11pt; font-weight:bold;">${instansi1}</div>
+                        <div style="font-size:11pt; font-weight:bold;">${instansi2}</div>
+                        <div style="font-size:13pt; font-weight:bold; margin:2px 0;">${sekolah}</div>
+                        <div style="font-size:8.5pt;">${alamat}</div>
+                        <div style="font-size:8.5pt; text-decoration:underline; color:blue;">${email}</div>
+                        <div style="font-size:8pt; font-weight:bold; margin-top:3px;">${nomorKop}</div>
+                    </td>
+                    <td style="width:15%; text-align:center; vertical-align:middle;">${imgKanan}</td>
+                </tr>
+            </table>
         </div>
 
-        <!-- JUDUL UJIAN -->
-        <div style="text-align:center; font-weight:bold; font-size:12pt; text-transform:uppercase; margin-bottom:12px;">
-            <u>SOAL UJIAN SEMESTER (PAKET ${packetName})</u>
+        <!-- JUDUL & METADATA -->
+        <div class="text-center font-bold" style="font-size:12pt; margin-bottom:12px; text-decoration:underline;">
+            ${judul} (PAKET ${packetName})
         </div>
+
+        <table style="width:100%; font-size:10.5pt; margin-bottom:8px;">
+            <tr>
+                <td style="width:18%;">Program Diklat</td>
+                <td style="width:2%;">:</td>
+                <td style="width:40%; font-weight:bold;">${mapel}</td>
+                <td style="width:18%;">Hari / Tanggal</td>
+                <td style="width:2%;">:</td>
+                <td style="width:20%;">${waktu}</td>
+            </tr>
+            <tr>
+                <td>Kelas / Jurusan</td>
+                <td>:</td>
+                <td>${kelas}</td>
+                <td>Waktu</td>
+                <td>:</td>
+                <td>-</td>
+            </tr>
+        </table>
+
+        <div class="border-single"></div>
 
         <div style="font-weight:bold; margin-bottom:8px;">Pilihlah jawaban berikut dengan benar!</div>
 
-        <!-- LIST SOAL PILIHAN GANDA -->
-        <div class="soal-container">
+        <!-- DAFTAR SOAL PG -->
+        <div>
     `;
 
-    // Render PG
     pgList.forEach((q, idx) => {
         const shuffledOpsi = shuffleArray(q.opsi);
         const opsiLayout = getOpsiLayoutHtml(shuffledOpsi);
-        const gambarHtml = q.gambar ? `<div style="margin:5px 0 5px 28px;"><img src="${q.gambar}" style="max-width:220px; max-height:150px; border:1px solid #ccc;"/></div>` : '';
+        const gambarHtml = q.gambar ? `<div style="margin:4px 0 4px 24px;"><img src="${q.gambar}" style="max-width:200px; height:auto;"/></div>` : '';
 
         html += `
-        <div style="margin-bottom:12px; page-break-inside:avoid;">
-            <div style="display:table; width:100%; margin-bottom:4px;">
-                <div style="display:table-cell; width:28px; vertical-align:top;">${idx + 1}.</div>
-                <div style="display:table-cell; vertical-align:top;">${q.soal}</div>
-            </div>
+        <div style="margin-bottom:10px; page-break-inside:avoid;">
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:24px; vertical-align:top; font-weight:bold;">${idx + 1}.</td>
+                    <td style="vertical-align:top;">${q.soal}</td>
+                </tr>
+            </table>
             ${gambarHtml}
-            <div style="margin-left:28px; width:calc(100% - 28px);">
+            <div style="margin-left:24px; margin-top:2px;">
                 ${opsiLayout}
             </div>
         </div>`;
     });
 
-    // Render Essay
     if (essayList.length > 0) {
-        html += `<div style="font-weight:bold; margin:16px 0 8px 0;">Jawablah pertanyaan berikut dengan singkat dan tepat!</div>`;
+        html += `<div style="font-weight:bold; margin:16px 0 8px 0;">Jawablah pertanyaan berikut dengan singkat dan jelas!</div>`;
         essayList.forEach((q, idx) => {
-            const gambarHtml = q.gambar ? `<div style="margin:5px 0 5px 28px;"><img src="${q.gambar}" style="max-width:220px; max-height:150px; border:1px solid #ccc;"/></div>` : '';
+            const gambarHtml = q.gambar ? `<div style="margin:4px 0 4px 24px;"><img src="${q.gambar}" style="max-width:200px; height:auto;"/></div>` : '';
             html += `
-            <div style="margin-bottom:12px; page-break-inside:avoid;">
-                <div style="display:table; width:100%; margin-bottom:4px;">
-                    <div style="display:table-cell; width:28px; vertical-align:top;">${idx + 1}.</div>
-                    <div style="display:table-cell; vertical-align:top;">${q.soal}</div>
-                </div>
+            <div style="margin-bottom:10px; page-break-inside:avoid;">
+                <table style="width:100%;">
+                    <tr>
+                        <td style="width:24px; vertical-align:top; font-weight:bold;">${idx + 1}.</td>
+                        <td style="vertical-align:top;">${q.soal}</td>
+                    </tr>
+                </table>
                 ${gambarHtml}
             </div>`;
         });
     }
 
-    html += `</div></div>`;
+    html += `</div></body></html>`;
     return html;
 }
 
-// Generator Template Excel Master
 function downloadExcelTemplate(optionCount) {
     const headers = ["Pertanyaan / Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D"];
     if (optionCount === 5) headers.push("Opsi E");
@@ -275,17 +339,15 @@ function downloadExcelTemplate(optionCount) {
 
     const sampleData = [
         headers,
-        ["Berapakah hasil dari persamaan $x^2 - 5x + 6 = 0$?", "$x=2$ atau $x=3$", "$x=-2$ atau $x=3$", "$x=1$ atau $x=6$", "$x=-1$", "$x=0$", "A", ""].slice(0, optionCount + 3),
-        ["Jelaskan fungsi dari RAM pada komputer!", "", "", "", "", "", "Kunci / Rubrik Essay", ""].slice(0, optionCount + 3)
+        ["Hasil dari $\\sum_{i=1}^{3} i^2$ adalah...", "12", "14", "16", "18", "20", "B", ""].slice(0, optionCount + 3)
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(sampleData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "MasterSoal");
-    XLSX.writeFile(wb, `Template_Master_Soal_${optionCount === 5 ? 'SMA_SMK' : 'SD_SMP'}.xlsx`);
+    XLSX.writeFile(wb, `Template_Master_Soal.xlsx`);
 }
 
-// Auto Init saat DOM siap
 document.addEventListener('DOMContentLoaded', () => {
     initShuffler();
 });
