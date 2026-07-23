@@ -169,6 +169,25 @@ export function initShuffler() {
     }
 }
 
+// FUNGSI UNTUK MERENDER PRATINJAU SOAL PADA PRATINJAU WEB
+function renderPreviewSoal(pgList, essayList, container) {
+    if (!container) return;
+
+    // Memanfaatkan generator HTML utama agar hasil tampilan web presisi dengan Word
+    const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER");
+    
+    container.innerHTML = `
+        <div class="bg-white text-black p-6 rounded-lg shadow-md border border-slate-300" style="font-family: 'Times New Roman', Times, serif;">
+            ${htmlPreview}
+        </div>
+    `;
+
+    // Render ulang MathJax jika terdapat rumus matematika
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
+    }
+}
+
 // LOGIKA LAYOUT OPSI ADAPTIF (1 BARIS, 2 BARIS, ATAU KE BAWAH)
 function renderOpsiAdaptif(opsiArray) {
     const labels = ["A", "B", "C", "D", "E"];
@@ -201,25 +220,6 @@ function renderOpsiAdaptif(opsiArray) {
                 <b>${labels[idx]}.</b> ${opt.teks}
             </div>
         `).join('');
-    }
-}
-
-// FUNGSI RENDER PRATINJAU DI HALAMAN WEB
-function renderPreviewSoal(pgList, essayList, container) {
-    if (!container) return;
-
-    // Memanfaatkan fungsi generator HTML dokumen agar pratinjau di web 100% presisi dengan hasil Word
-    const htmlPreview = generateFullExamHTML(pgList, essayList, "MASTER/PRATINJAU");
-    
-    container.innerHTML = `
-        <div class="bg-white text-slate-900 p-6 rounded-xl shadow-inner border border-slate-200 overflow-x-auto" style="min-height: 400px;">
-            ${htmlPreview}
-        </div>
-    `;
-
-    // Render ulang MathJax jika terdapat formula matematika
-    if (window.MathJax) {
-        window.MathJax.typesetPromise([container]).catch((err) => console.log('MathJax error:', err));
     }
 }
 
